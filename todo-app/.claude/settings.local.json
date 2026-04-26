@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(docker compose *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(mvn compile *)",
+      "Bash(mvn test *)"
     ]
   }
 }
