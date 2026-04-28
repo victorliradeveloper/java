@@ -27,9 +27,14 @@ public class BookModel implements Serializable {
 
     //@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @ManyToMany//(fetch = FetchType.LAZY)
+    // Cria uma terceira tabela chamada "tb_book_author" no banco para representar o relacionamento ManyToMany.
+    // Isso é necessário pois um livro pode ter vários autores, e um autor pode ter vários livros.
+    // Não é possível representar isso com uma simples coluna, então o JPA cria uma tabela intermediária.
     @JoinTable(
             name = "tb_book_author",
+            // Coluna que guarda o ID do Book nessa tabela intermediária (aponta para TB_BOOK)
             joinColumns = @JoinColumn(name = "book_id"),
+            // Coluna que guarda o ID do Author nessa tabela intermediária (aponta para TB_AUTHOR)
             inverseJoinColumns = @JoinColumn(name = "author_id"))
     private Set<AuthorModel> authors = new HashSet<>();
 
