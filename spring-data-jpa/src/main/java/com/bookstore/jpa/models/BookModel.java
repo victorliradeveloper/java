@@ -21,6 +21,7 @@ public class BookModel implements Serializable {
 
     //@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @ManyToOne//(fetch = FetchType.LAZY)
+    // Cria a coluna "publisher_id" na tabela TB_BOOK. Ela armazena o ID do publisher, funcionando como chave estrangeira que aponta para a tabela TB_PUBLISHER.
     @JoinColumn(name = "publisher_id")
     private PublisherModel publisher;
 
