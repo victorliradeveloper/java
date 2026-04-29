@@ -54,14 +54,14 @@ class TodoControllerTest {
     }
 
     // -------------------------------------------------------------------------
-    // POST /todo
+    // POST /api/v1/todos
     // -------------------------------------------------------------------------
 
     @Test
     void criar_comDadosValidos_deveRetornar201() throws Exception {
         when(todoService.criar(any(TodoRequestDTO.class))).thenReturn(response);
 
-        mockMvc.perform(post("/todo")
+        mockMvc.perform(post("/api/v1/todos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -74,7 +74,7 @@ class TodoControllerTest {
     void criar_semTitulo_deveRetornar400() throws Exception {
         TodoRequestDTO requestInvalido = new TodoRequestDTO("", "descrição", null);
 
-        mockMvc.perform(post("/todo")
+        mockMvc.perform(post("/api/v1/todos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestInvalido)))
                 .andExpect(status().isBadRequest());
@@ -83,14 +83,14 @@ class TodoControllerTest {
     }
 
     // -------------------------------------------------------------------------
-    // GET /todo
+    // GET /api/v1/todos
     // -------------------------------------------------------------------------
 
     @Test
     void listar_semFiltro_deveRetornarTodosOsItens() throws Exception {
         when(todoService.listarTodos()).thenReturn(List.of(response));
 
-        mockMvc.perform(get("/todo"))
+        mockMvc.perform(get("/api/v1/todos"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].titulo").value("Estudar Java"));
@@ -102,7 +102,7 @@ class TodoControllerTest {
                 .id(2L).titulo("Feito").concluido(true).dataCriacao(LocalDateTime.now()).build();
         when(todoService.listarPorStatus(true)).thenReturn(List.of(concluido));
 
-        mockMvc.perform(get("/todo").param("concluido", "true"))
+        mockMvc.perform(get("/api/v1/todos").param("concluido", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].concluido").value(true));
     }
@@ -111,20 +111,20 @@ class TodoControllerTest {
     void listar_comFiltroPendente_deveRetornarItensPendentes() throws Exception {
         when(todoService.listarPorStatus(false)).thenReturn(List.of(response));
 
-        mockMvc.perform(get("/todo").param("concluido", "false"))
+        mockMvc.perform(get("/api/v1/todos").param("concluido", "false"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].concluido").value(false));
     }
 
     // -------------------------------------------------------------------------
-    // GET /todo/{id}
+    // GET /api/v1/todos/{id}
     // -------------------------------------------------------------------------
 
     @Test
     void buscarPorId_quandoExiste_deveRetornar200() throws Exception {
         when(todoService.buscarPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/todo/1"))
+        mockMvc.perform(get("/api/v1/todos/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.titulo").value("Estudar Java"));
@@ -134,19 +134,19 @@ class TodoControllerTest {
     void buscarPorId_quandoNaoExiste_deveRetornar404() throws Exception {
         when(todoService.buscarPorId(99L)).thenThrow(new TodoNotFoundException(99L));
 
-        mockMvc.perform(get("/todo/99"))
+        mockMvc.perform(get("/api/v1/todos/99"))
                 .andExpect(status().isNotFound());
     }
 
     // -------------------------------------------------------------------------
-    // PUT /todo/{id}
+    // PUT /api/v1/todos/{id}
     // -------------------------------------------------------------------------
 
     @Test
     void atualizar_comDadosValidos_deveRetornar200() throws Exception {
         when(todoService.atualizar(eq(1L), any(TodoRequestDTO.class))).thenReturn(response);
 
-        mockMvc.perform(put("/todo/1")
+        mockMvc.perform(put("/api/v1/todos/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -157,14 +157,14 @@ class TodoControllerTest {
     void atualizar_quandoNaoExiste_deveRetornar404() throws Exception {
         when(todoService.atualizar(eq(99L), any())).thenThrow(new TodoNotFoundException(99L));
 
-        mockMvc.perform(put("/todo/99")
+        mockMvc.perform(put("/api/v1/todos/99")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
     }
 
     // -------------------------------------------------------------------------
-    // PATCH /todo/{id}/concluir
+    // PATCH /api/v1/todos/{id}/concluir
     // -------------------------------------------------------------------------
 
     @Test
@@ -173,7 +173,7 @@ class TodoControllerTest {
                 .id(1L).titulo("Estudar Java").concluido(true).dataCriacao(LocalDateTime.now()).build();
         when(todoService.concluir(1L)).thenReturn(concluido);
 
-        mockMvc.perform(patch("/todo/1/concluir"))
+        mockMvc.perform(patch("/api/v1/todos/1/concluir"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.concluido").value(true));
     }
@@ -182,19 +182,19 @@ class TodoControllerTest {
     void concluir_quandoNaoExiste_deveRetornar404() throws Exception {
         when(todoService.concluir(99L)).thenThrow(new TodoNotFoundException(99L));
 
-        mockMvc.perform(patch("/todo/99/concluir"))
+        mockMvc.perform(patch("/api/v1/todos/99/concluir"))
                 .andExpect(status().isNotFound());
     }
 
     // -------------------------------------------------------------------------
-    // DELETE /todo/{id}
+    // DELETE /api/v1/todos/{id}
     // -------------------------------------------------------------------------
 
     @Test
     void deletar_quandoExiste_deveRetornar204() throws Exception {
         doNothing().when(todoService).deletar(1L);
 
-        mockMvc.perform(delete("/todo/1"))
+        mockMvc.perform(delete("/api/v1/todos/1"))
                 .andExpect(status().isNoContent());
     }
 
@@ -202,7 +202,7 @@ class TodoControllerTest {
     void deletar_quandoNaoExiste_deveRetornar404() throws Exception {
         doThrow(new TodoNotFoundException(99L)).when(todoService).deletar(99L);
 
-        mockMvc.perform(delete("/todo/99"))
+        mockMvc.perform(delete("/api/v1/todos/99"))
                 .andExpect(status().isNotFound());
     }
 }
