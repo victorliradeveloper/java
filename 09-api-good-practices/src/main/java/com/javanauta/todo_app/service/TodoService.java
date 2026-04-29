@@ -2,11 +2,13 @@ package com.javanauta.todo_app.service;
 
 import com.javanauta.todo_app.dto.CursorPageResponseDTO;
 import com.javanauta.todo_app.dto.PagedResponseDTO;
+import com.javanauta.todo_app.dto.TodoFilterDTO;
 import com.javanauta.todo_app.dto.TodoRequestDTO;
 import com.javanauta.todo_app.dto.TodoResponseDTO;
 import com.javanauta.todo_app.exception.TodoNotFoundException;
 import com.javanauta.todo_app.model.Todo;
 import com.javanauta.todo_app.repository.TodoRepository;
+import com.javanauta.todo_app.specification.TodoSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,12 +32,8 @@ public class TodoService {
         return toResponse(todoRepository.save(todo));
     }
 
-    public PagedResponseDTO<TodoResponseDTO> listarPaginado(Pageable pageable) {
-        return toPagedResponse(todoRepository.findAll(pageable));
-    }
-
-    public PagedResponseDTO<TodoResponseDTO> listarPorStatusPaginado(boolean concluido, Pageable pageable) {
-        return toPagedResponse(todoRepository.findByConcluido(concluido, pageable));
+    public PagedResponseDTO<TodoResponseDTO> listar(TodoFilterDTO filtro, Pageable pageable) {
+        return toPagedResponse(todoRepository.findAll(TodoSpecification.comFiltros(filtro), pageable));
     }
 
     public CursorPageResponseDTO<TodoResponseDTO> listarComCursor(Long cursor, int size) {

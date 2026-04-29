@@ -56,15 +56,32 @@ POST /api/v1/todos
 ### Listar tarefas (offset pagination)
 
 ```
-GET /api/v1/todos?page=0&size=20&sort=id
+GET /api/v1/todos
 ```
 
-| Parâmetro   | Tipo    | Obrigatório | Descrição                          |
-|-------------|---------|-------------|------------------------------------|
-| `page`      | int     | não         | Número da página (padrão: 0)       |
-| `size`      | int     | não         | Itens por página (padrão: 20)      |
-| `sort`      | string  | não         | Campo de ordenação (padrão: `id`)  |
-| `concluido` | boolean | não         | Filtra por status (`true`/`false`) |
+**Filtros disponíveis:**
+
+| Parâmetro      | Tipo     | Obrigatório | Descrição                                        |
+|----------------|----------|-------------|--------------------------------------------------|
+| `titulo`       | string   | não         | Busca parcial, case-insensitive                  |
+| `concluido`    | boolean  | não         | Filtra por status (`true`/`false`)               |
+| `dataLimiteDe` | datetime | não         | Tarefas com prazo a partir de (ISO 8601)         |
+| `dataLimiteAte`| datetime | não         | Tarefas com prazo até (ISO 8601)                 |
+
+**Paginação e ordenação:**
+
+| Parâmetro | Tipo   | Obrigatório | Descrição                                           |
+|-----------|--------|-------------|-----------------------------------------------------|
+| `page`    | int    | não         | Número da página (padrão: `0`)                      |
+| `size`    | int    | não         | Itens por página (padrão: `20`, máximo: `100`)      |
+| `sort`    | string | não         | Campo e direção, ex: `titulo,asc` (padrão: `id,asc`)|
+
+**Exemplos:**
+```
+GET /api/v1/todos?titulo=spring&concluido=false
+GET /api/v1/todos?dataLimiteDe=2026-05-01T00:00:00&dataLimiteAte=2026-05-31T23:59:59
+GET /api/v1/todos?concluido=false&sort=dataLimite,asc&page=0&size=10
+```
 
 **Resposta `200 OK`:**
 ```json

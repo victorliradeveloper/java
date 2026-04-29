@@ -10,7 +10,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "todo")
+@Table(name = "todo", indexes = {
+        @Index(name = "idx_todo_concluido", columnList = "concluido"),
+        @Index(name = "idx_todo_data_limite", columnList = "data_limite"),
+        @Index(name = "idx_todo_concluido_data_limite", columnList = "concluido, data_limite")
+})
 @Entity
 public class Todo {
 

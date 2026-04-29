@@ -2,6 +2,7 @@ package com.javanauta.todo_app.controller;
 
 import com.javanauta.todo_app.dto.CursorPageResponseDTO;
 import com.javanauta.todo_app.dto.PagedResponseDTO;
+import com.javanauta.todo_app.dto.TodoFilterDTO;
 import com.javanauta.todo_app.dto.TodoRequestDTO;
 import com.javanauta.todo_app.dto.TodoResponseDTO;
 import com.javanauta.todo_app.service.TodoService;
@@ -27,12 +28,9 @@ public class TodoController {
 
     @GetMapping
     public ResponseEntity<PagedResponseDTO<TodoResponseDTO>> listar(
-            @RequestParam(required = false) Boolean concluido,
+            @ModelAttribute TodoFilterDTO filtro,
             @PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        if (concluido != null) {
-            return ResponseEntity.ok(todoService.listarPorStatusPaginado(concluido, pageable));
-        }
-        return ResponseEntity.ok(todoService.listarPaginado(pageable));
+        return ResponseEntity.ok(todoService.listar(filtro, pageable));
     }
 
     @GetMapping("/cursor")

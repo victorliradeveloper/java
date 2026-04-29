@@ -1,6 +1,9 @@
 package com.javanauta.todo_app.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.javanauta.todo_app.dto.CursorPageResponseDTO;
+import com.javanauta.todo_app.dto.PagedResponseDTO;
+import com.javanauta.todo_app.dto.TodoFilterDTO;
 import com.javanauta.todo_app.dto.TodoRequestDTO;
 import com.javanauta.todo_app.dto.TodoResponseDTO;
 import com.javanauta.todo_app.exception.TodoNotFoundException;
@@ -10,14 +13,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -87,33 +90,79 @@ class TodoControllerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void listar_semFiltro_deveRetornarTodosOsItens() throws Exception {
-        when(todoService.listarTodos()).thenReturn(List.of(response));
+    void listar_semFiltros_deveRetornarItensPaginados() throws Exception {
+        PagedResponseDTO<TodoResponseDTO> paged = PagedResponseDTO.<TodoResponseDTO>builder()
+                .content(List.of(response))
+                .page(0).size(20).totalElements(1).totalPages(1).last(true)
+                .build();
+        when(todoService.listar(any(TodoFilterDTO.class), any(Pageable.class))).thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/todos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].titulo").value("Estudar Java"));
+                .andExpect(jsonPath("$.content[0].titulo").value("Estudar Java"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void listar_comFiltroTitulo_deveRetornarItensFiltrados() throws Exception {
+        PagedResponseDTO<TodoResponseDTO> paged = PagedResponseDTO.<TodoResponseDTO>builder()
+                .content(List.of(response))
+                .page(0).size(20).totalElements(1).totalPages(1).last(true)
+                .build();
+        when(todoService.listar(any(TodoFilterDTO.class), any(Pageable.class))).thenReturn(paged);
+
+        mockMvc.perform(get("/api/v1/todos").param("titulo", "Estudar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].titulo").value("Estudar Java"));
     }
 
     @Test
     void listar_comFiltroConcluido_deveRetornarItensFiltrados() throws Exception {
         TodoResponseDTO concluido = TodoResponseDTO.builder()
                 .id(2L).titulo("Feito").concluido(true).dataCriacao(LocalDateTime.now()).build();
-        when(todoService.listarPorStatus(true)).thenReturn(List.of(concluido));
+        PagedResponseDTO<TodoResponseDTO> paged = PagedResponseDTO.<TodoResponseDTO>builder()
+                .content(List.of(concluido))
+                .page(0).size(20).totalElements(1).totalPages(1).last(true)
+                .build();
+        when(todoService.listar(any(TodoFilterDTO.class), any(Pageable.class))).thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/todos").param("concluido", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].concluido").value(true));
+                .andExpect(jsonPath("$.content[0].concluido").value(true));
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /api/v1/todos/cursor
+    // -------------------------------------------------------------------------
+
+    @Test
+    void listarComCursor_semCursor_deveRetornarPrimeiraPagina() throws Exception {
+        CursorPageResponseDTO<TodoResponseDTO> cursorPage = CursorPageResponseDTO.<TodoResponseDTO>builder()
+                .content(List.of(response))
+                .nextCursor(null)
+                .hasNext(false)
+                .build();
+        when(todoService.listarComCursor(isNull(), eq(20))).thenReturn(cursorPage);
+
+        mockMvc.perform(get("/api/v1/todos/cursor"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].titulo").value("Estudar Java"))
+                .andExpect(jsonPath("$.hasNext").value(false));
     }
 
     @Test
-    void listar_comFiltroPendente_deveRetornarItensPendentes() throws Exception {
-        when(todoService.listarPorStatus(false)).thenReturn(List.of(response));
+    void listarComCursor_comCursor_deveRetornarProximaPagina() throws Exception {
+        CursorPageResponseDTO<TodoResponseDTO> cursorPage = CursorPageResponseDTO.<TodoResponseDTO>builder()
+                .content(List.of(response))
+                .nextCursor(10L)
+                .hasNext(true)
+                .build();
+        when(todoService.listarComCursor(eq(5L), eq(20))).thenReturn(cursorPage);
 
-        mockMvc.perform(get("/api/v1/todos").param("concluido", "false"))
+        mockMvc.perform(get("/api/v1/todos/cursor").param("cursor", "5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].concluido").value(false));
+                .andExpect(jsonPath("$.nextCursor").value(10))
+                .andExpect(jsonPath("$.hasNext").value(true));
     }
 
     // -------------------------------------------------------------------------
