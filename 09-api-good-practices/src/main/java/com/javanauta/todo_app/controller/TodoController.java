@@ -22,44 +22,44 @@ public class TodoController {
     private final TodoService todoService;
 
     @PostMapping
-    public ResponseEntity<TodoResponseDTO> criar(@RequestBody @Valid TodoRequestDTO request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(todoService.criar(request));
+    public ResponseEntity<TodoResponseDTO> create(@RequestBody @Valid TodoRequestDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(todoService.create(request));
     }
 
     @GetMapping
-    public ResponseEntity<PagedResponseDTO<TodoResponseDTO>> listar(
-            @ModelAttribute TodoFilterDTO filtro,
+    public ResponseEntity<PagedResponseDTO<TodoResponseDTO>> list(
+            @ModelAttribute TodoFilterDTO filter,
             @PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        return ResponseEntity.ok(todoService.listar(filtro, pageable));
+        return ResponseEntity.ok(todoService.findAll(filter, pageable));
     }
 
     @GetMapping("/cursor")
-    public ResponseEntity<CursorPageResponseDTO<TodoResponseDTO>> listarComCursor(
+    public ResponseEntity<CursorPageResponseDTO<TodoResponseDTO>> listWithCursor(
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(todoService.listarComCursor(cursor, size));
+        return ResponseEntity.ok(todoService.listWithCursor(cursor, size));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TodoResponseDTO> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(todoService.buscarPorId(id));
+    public ResponseEntity<TodoResponseDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(todoService.getById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TodoResponseDTO> atualizar(
+    public ResponseEntity<TodoResponseDTO> update(
             @PathVariable Long id,
             @RequestBody @Valid TodoRequestDTO request) {
-        return ResponseEntity.ok(todoService.atualizar(id, request));
+        return ResponseEntity.ok(todoService.update(id, request));
     }
 
-    @PatchMapping("/{id}/concluir")
-    public ResponseEntity<TodoResponseDTO> concluir(@PathVariable Long id) {
-        return ResponseEntity.ok(todoService.concluir(id));
+    @PatchMapping("/{id}/complete")
+    public ResponseEntity<TodoResponseDTO> complete(@PathVariable Long id) {
+        return ResponseEntity.ok(todoService.complete(id));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        todoService.deletar(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        todoService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

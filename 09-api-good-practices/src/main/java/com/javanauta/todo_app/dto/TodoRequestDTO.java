@@ -14,10 +14,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class TodoRequestDTO {
 
-    @NotBlank(message = "Título é obrigatório")
-    private String titulo;
+    @NotBlank(message = "Title is required")
+    private String title;
 
-    private String descricao;
+    private String description;
 
-    private LocalDateTime dataLimite;
+    private LocalDateTime dueDate;
 }

@@ -1,0 +1,210 @@
+{
+  "info": {
+    "name": "Todo App API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Victor\",\n  \"email\": \"victor@email.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"victor@email.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Todos",
+      "item": [
+        {
+          "name": "Criar tarefa",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Estudar Spring Boot\",\n  \"description\": \"Revisar conceitos de JPA\",\n  \"dueDate\": \"2026-05-10T18:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos"]
+            }
+          }
+        },
+        {
+          "name": "Listar tarefas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos?title=&completed=&dueDateFrom=&dueDateTo=&page=0&size=20&sort=id,asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos"],
+              "query": [
+                { "key": "title", "value": "", "description": "Busca parcial no título (case-insensitive)", "disabled": true },
+                { "key": "completed", "value": "", "description": "true ou false", "disabled": true },
+                { "key": "dueDateFrom", "value": "", "description": "Ex: 2026-05-01T00:00:00", "disabled": true },
+                { "key": "dueDateTo", "value": "", "description": "Ex: 2026-05-31T23:59:59", "disabled": true },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "id,asc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar tarefas (cursor)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos/cursor?size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos", "cursor"],
+              "query": [
+                { "key": "cursor", "value": "", "description": "ID do último item recebido (omitir na primeira página)", "disabled": true },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar tarefa por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos", "1"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar tarefa",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Estudar Spring Boot (atualizado)\",\n  \"description\": \"Revisar JPA e Spring Security\",\n  \"dueDate\": \"2026-05-15T18:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos", "1"]
+            }
+          }
+        },
+        {
+          "name": "Concluir tarefa",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos/1/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos", "1", "complete"]
+            }
+          }
+        },
+        {
+          "name": "Deletar tarefa",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/todos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "todos", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -47,169 +47,169 @@ class TodoServiceTest {
     void setUp() {
         todo = Todo.builder()
                 .id(1L)
-                .titulo("Estudar Java")
-                .descricao("Revisar streams e lambdas")
-                .concluido(false)
-                .dataCriacao(LocalDateTime.now())
-                .dataLimite(LocalDateTime.now().plusDays(3))
+                .title("Study Java")
+                .description("Review streams and lambdas")
+                .completed(false)
+                .createdAt(LocalDateTime.now())
+                .dueDate(LocalDateTime.now().plusDays(3))
                 .build();
 
-        request = new TodoRequestDTO("Estudar Java", "Revisar streams e lambdas", LocalDateTime.now().plusDays(3));
+        request = new TodoRequestDTO("Study Java", "Review streams and lambdas", LocalDateTime.now().plusDays(3));
     }
 
     // -------------------------------------------------------------------------
-    // criar
+    // create
     // -------------------------------------------------------------------------
 
     @Test
-    void criar_deveRetornarTodoCriado() {
+    void create_shouldReturnCreatedTodo() {
         when(todoRepository.save(any(Todo.class))).thenReturn(todo);
 
-        TodoResponseDTO response = todoService.criar(request);
+        TodoResponseDTO response = todoService.create(request);
 
         assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getTitulo()).isEqualTo("Estudar Java");
-        assertThat(response.getDescricao()).isEqualTo("Revisar streams e lambdas");
-        assertThat(response.isConcluido()).isFalse();
+        assertThat(response.getTitle()).isEqualTo("Study Java");
+        assertThat(response.getDescription()).isEqualTo("Review streams and lambdas");
+        assertThat(response.isCompleted()).isFalse();
         verify(todoRepository, times(1)).save(any(Todo.class));
     }
 
     // -------------------------------------------------------------------------
-    // listar
+    // findAll
     // -------------------------------------------------------------------------
 
     @Test
-    void listar_semFiltros_deveRetornarTodosOsItens() {
+    void findAll_withoutFilters_shouldReturnAllItems() {
         Pageable pageable = PageRequest.of(0, 20);
-        Todo outro = Todo.builder().id(2L).titulo("Outro").concluido(true).dataCriacao(LocalDateTime.now()).build();
-        Page<Todo> page = new PageImpl<>(List.of(todo, outro), pageable, 2);
+        Todo other = Todo.builder().id(2L).title("Other").completed(true).createdAt(LocalDateTime.now()).build();
+        Page<Todo> page = new PageImpl<>(List.of(todo, other), pageable, 2);
         when(todoRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        PagedResponseDTO<TodoResponseDTO> resultado = todoService.listar(new TodoFilterDTO(), pageable);
+        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(new TodoFilterDTO(), pageable);
 
-        assertThat(resultado.getContent()).hasSize(2);
-        assertThat(resultado.getTotalElements()).isEqualTo(2);
-        assertThat(resultado.getPage()).isEqualTo(0);
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getPage()).isEqualTo(0);
     }
 
     @Test
-    void listar_comFiltroConcluido_deveRetornarApenasItensConcluidos() {
+    void findAll_withCompletedFilter_shouldReturnOnlyCompletedItems() {
         Pageable pageable = PageRequest.of(0, 20);
-        Todo concluido = Todo.builder().id(2L).titulo("Feito").concluido(true).dataCriacao(LocalDateTime.now()).build();
-        Page<Todo> page = new PageImpl<>(List.of(concluido), pageable, 1);
+        Todo completed = Todo.builder().id(2L).title("Done").completed(true).createdAt(LocalDateTime.now()).build();
+        Page<Todo> page = new PageImpl<>(List.of(completed), pageable, 1);
         when(todoRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        TodoFilterDTO filtro = new TodoFilterDTO();
-        filtro.setConcluido(true);
+        TodoFilterDTO filter = new TodoFilterDTO();
+        filter.setCompleted(true);
 
-        PagedResponseDTO<TodoResponseDTO> resultado = todoService.listar(filtro, pageable);
+        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(filter, pageable);
 
-        assertThat(resultado.getContent()).hasSize(1);
-        assertThat(resultado.getContent().get(0).isConcluido()).isTrue();
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).isCompleted()).isTrue();
     }
 
     @Test
-    void listar_comFiltroTitulo_deveRetornarItensFiltrados() {
+    void findAll_withTitleFilter_shouldReturnFilteredItems() {
         Pageable pageable = PageRequest.of(0, 20);
         Page<Todo> page = new PageImpl<>(List.of(todo), pageable, 1);
         when(todoRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        TodoFilterDTO filtro = new TodoFilterDTO();
-        filtro.setTitulo("Estudar");
+        TodoFilterDTO filter = new TodoFilterDTO();
+        filter.setTitle("Study");
 
-        PagedResponseDTO<TodoResponseDTO> resultado = todoService.listar(filtro, pageable);
+        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(filter, pageable);
 
-        assertThat(resultado.getContent()).hasSize(1);
-        assertThat(resultado.getContent().get(0).getTitulo()).contains("Estudar");
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getTitle()).contains("Study");
     }
 
     @Test
-    void listar_quandoVazio_deveRetornarConteudoVazio() {
+    void findAll_whenEmpty_shouldReturnEmptyContent() {
         Pageable pageable = PageRequest.of(0, 20);
         Page<Todo> page = new PageImpl<>(List.of(), pageable, 0);
         when(todoRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        PagedResponseDTO<TodoResponseDTO> resultado = todoService.listar(new TodoFilterDTO(), pageable);
+        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(new TodoFilterDTO(), pageable);
 
-        assertThat(resultado.getContent()).isEmpty();
-        assertThat(resultado.getTotalElements()).isEqualTo(0);
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(0);
     }
 
     // -------------------------------------------------------------------------
-    // listarComCursor
+    // listWithCursor
     // -------------------------------------------------------------------------
 
     @Test
-    void listarComCursor_semCursor_deveRetornarPrimeiraPagina() {
-        Todo todo2 = Todo.builder().id(2L).titulo("Segundo").concluido(false).dataCriacao(LocalDateTime.now()).build();
+    void listWithCursor_withoutCursor_shouldReturnFirstPage() {
+        Todo todo2 = Todo.builder().id(2L).title("Second").completed(false).createdAt(LocalDateTime.now()).build();
         when(todoRepository.findWithCursor(null, PageRequest.of(0, 21))).thenReturn(List.of(todo, todo2));
 
-        CursorPageResponseDTO<TodoResponseDTO> resultado = todoService.listarComCursor(null, 20);
+        CursorPageResponseDTO<TodoResponseDTO> result = todoService.listWithCursor(null, 20);
 
-        assertThat(resultado.getContent()).hasSize(2);
-        assertThat(resultado.isHasNext()).isFalse();
-        assertThat(resultado.getNextCursor()).isNull();
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.isHasNext()).isFalse();
+        assertThat(result.getNextCursor()).isNull();
     }
 
     @Test
-    void listarComCursor_comMaisItensQueSize_deveRetornarNextCursor() {
+    void listWithCursor_withMoreItemsThanSize_shouldReturnNextCursor() {
         List<Todo> todos = new ArrayList<>();
         for (int i = 1; i <= 3; i++) {
-            todos.add(Todo.builder().id((long) i).titulo("Todo " + i).concluido(false).dataCriacao(LocalDateTime.now()).build());
+            todos.add(Todo.builder().id((long) i).title("Todo " + i).completed(false).createdAt(LocalDateTime.now()).build());
         }
         when(todoRepository.findWithCursor(0L, PageRequest.of(0, 3))).thenReturn(todos);
 
-        CursorPageResponseDTO<TodoResponseDTO> resultado = todoService.listarComCursor(0L, 2);
+        CursorPageResponseDTO<TodoResponseDTO> result = todoService.listWithCursor(0L, 2);
 
-        assertThat(resultado.getContent()).hasSize(2);
-        assertThat(resultado.isHasNext()).isTrue();
-        assertThat(resultado.getNextCursor()).isEqualTo(2L);
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.isHasNext()).isTrue();
+        assertThat(result.getNextCursor()).isEqualTo(2L);
     }
 
     // -------------------------------------------------------------------------
-    // buscarPorId
+    // getById
     // -------------------------------------------------------------------------
 
     @Test
-    void buscarPorId_quandoExiste_deveRetornarTodo() {
+    void getById_whenExists_shouldReturnTodo() {
         when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
 
-        TodoResponseDTO response = todoService.buscarPorId(1L);
+        TodoResponseDTO response = todoService.getById(1L);
 
         assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getTitulo()).isEqualTo("Estudar Java");
+        assertThat(response.getTitle()).isEqualTo("Study Java");
     }
 
     @Test
-    void buscarPorId_quandoNaoExiste_deveLancarTodoNotFoundException() {
+    void getById_whenNotExists_shouldThrowTodoNotFoundException() {
         when(todoRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> todoService.buscarPorId(99L))
+        assertThatThrownBy(() -> todoService.getById(99L))
                 .isInstanceOf(TodoNotFoundException.class)
                 .hasMessageContaining("99");
     }
 
     // -------------------------------------------------------------------------
-    // atualizar
+    // update
     // -------------------------------------------------------------------------
 
     @Test
-    void atualizar_quandoExiste_deveRetornarTodoAtualizado() {
-        TodoRequestDTO novoRequest = new TodoRequestDTO("Novo título", "Nova descrição", null);
+    void update_whenExists_shouldReturnUpdatedTodo() {
+        TodoRequestDTO newRequest = new TodoRequestDTO("New title", "New description", null);
         when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
         when(todoRepository.save(any(Todo.class))).thenReturn(todo);
 
-        TodoResponseDTO response = todoService.atualizar(1L, novoRequest);
+        TodoResponseDTO response = todoService.update(1L, newRequest);
 
         assertThat(response).isNotNull();
         verify(todoRepository).save(todo);
     }
 
     @Test
-    void atualizar_quandoNaoExiste_deveLancarTodoNotFoundException() {
+    void update_whenNotExists_shouldThrowTodoNotFoundException() {
         when(todoRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> todoService.atualizar(99L, request))
+        assertThatThrownBy(() -> todoService.update(99L, request))
                 .isInstanceOf(TodoNotFoundException.class)
                 .hasMessageContaining("99");
 
@@ -217,51 +217,51 @@ class TodoServiceTest {
     }
 
     // -------------------------------------------------------------------------
-    // concluir
+    // complete
     // -------------------------------------------------------------------------
 
     @Test
-    void concluir_quandoExiste_deveMarcarlComoConcluido() {
+    void complete_whenExists_shouldMarkAsCompleted() {
         when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
         when(todoRepository.save(todo)).thenAnswer(inv -> {
             Todo t = inv.getArgument(0);
-            t.setConcluido(true);
+            t.setCompleted(true);
             return t;
         });
 
-        TodoResponseDTO response = todoService.concluir(1L);
+        TodoResponseDTO response = todoService.complete(1L);
 
-        assertThat(response.isConcluido()).isTrue();
+        assertThat(response.isCompleted()).isTrue();
         verify(todoRepository).save(todo);
     }
 
     @Test
-    void concluir_quandoNaoExiste_deveLancarTodoNotFoundException() {
+    void complete_whenNotExists_shouldThrowTodoNotFoundException() {
         when(todoRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> todoService.concluir(99L))
+        assertThatThrownBy(() -> todoService.complete(99L))
                 .isInstanceOf(TodoNotFoundException.class)
                 .hasMessageContaining("99");
     }
 
     // -------------------------------------------------------------------------
-    // deletar
+    // delete
     // -------------------------------------------------------------------------
 
     @Test
-    void deletar_quandoExiste_deveDeletarSemErro() {
+    void delete_whenExists_shouldDeleteWithoutError() {
         when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
 
-        todoService.deletar(1L);
+        todoService.delete(1L);
 
         verify(todoRepository).deleteById(1L);
     }
 
     @Test
-    void deletar_quandoNaoExiste_deveLancarTodoNotFoundException() {
+    void delete_whenNotExists_shouldThrowTodoNotFoundException() {
         when(todoRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> todoService.deletar(99L))
+        assertThatThrownBy(() -> todoService.delete(99L))
                 .isInstanceOf(TodoNotFoundException.class)
                 .hasMessageContaining("99");
 

@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @Table(name = "todo", indexes = {
-        @Index(name = "idx_todo_concluido", columnList = "concluido"),
-        @Index(name = "idx_todo_data_limite", columnList = "data_limite"),
-        @Index(name = "idx_todo_concluido_data_limite", columnList = "concluido, data_limite")
+        @Index(name = "idx_todo_completed", columnList = "completed"),
+        @Index(name = "idx_todo_due_date", columnList = "due_date"),
+        @Index(name = "idx_todo_completed_due_date", columnList = "completed, due_date")
 })
 @Entity
 public class Todo {
@@ -22,24 +22,24 @@ public class Todo {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "titulo", nullable = false)
-    private String titulo;
+    @Column(name = "title", nullable = false)
+    private String title;
 
-    @Column(name = "descricao")
-    private String descricao;
+    @Column(name = "description")
+    private String description;
 
-    @Column(name = "concluido", nullable = false)
-    private boolean concluido;
+    @Column(name = "completed", nullable = false, columnDefinition = "boolean not null default false")
+    private boolean completed;
 
-    @Column(name = "data_criacao", nullable = false)
-    private LocalDateTime dataCriacao;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "data_limite")
-    private LocalDateTime dataLimite;
+    @Column(name = "due_date")
+    private LocalDateTime dueDate;
 
     @PrePersist
     public void prePersist() {
-        this.dataCriacao = LocalDateTime.now();
-        this.concluido = false;
+        this.createdAt = LocalDateTime.now();
+        this.completed = false;
     }
 }

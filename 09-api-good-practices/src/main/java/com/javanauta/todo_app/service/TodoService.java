@@ -23,20 +23,20 @@ public class TodoService {
 
     private final TodoRepository todoRepository;
 
-    public TodoResponseDTO criar(TodoRequestDTO request) {
+    public TodoResponseDTO create(TodoRequestDTO request) {
         Todo todo = Todo.builder()
-                .titulo(request.getTitulo())
-                .descricao(request.getDescricao())
-                .dataLimite(request.getDataLimite())
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .dueDate(request.getDueDate())
                 .build();
         return toResponse(todoRepository.save(todo));
     }
 
-    public PagedResponseDTO<TodoResponseDTO> listar(TodoFilterDTO filtro, Pageable pageable) {
-        return toPagedResponse(todoRepository.findAll(TodoSpecification.comFiltros(filtro), pageable));
+    public PagedResponseDTO<TodoResponseDTO> findAll(TodoFilterDTO filter, Pageable pageable) {
+        return toPagedResponse(todoRepository.findAll(TodoSpecification.withFilters(filter), pageable));
     }
 
-    public CursorPageResponseDTO<TodoResponseDTO> listarComCursor(Long cursor, int size) {
+    public CursorPageResponseDTO<TodoResponseDTO> listWithCursor(Long cursor, int size) {
         List<Todo> todos = todoRepository.findWithCursor(cursor, PageRequest.of(0, size + 1));
         boolean hasNext = todos.size() > size;
         List<Todo> content = hasNext ? todos.subList(0, size) : todos;
@@ -48,30 +48,30 @@ public class TodoService {
                 .build();
     }
 
-    public TodoResponseDTO buscarPorId(Long id) {
-        return toResponse(buscarEntidade(id));
+    public TodoResponseDTO getById(Long id) {
+        return toResponse(findEntity(id));
     }
 
-    public TodoResponseDTO atualizar(Long id, TodoRequestDTO request) {
-        Todo todo = buscarEntidade(id);
-        todo.setTitulo(request.getTitulo());
-        todo.setDescricao(request.getDescricao());
-        todo.setDataLimite(request.getDataLimite());
+    public TodoResponseDTO update(Long id, TodoRequestDTO request) {
+        Todo todo = findEntity(id);
+        todo.setTitle(request.getTitle());
+        todo.setDescription(request.getDescription());
+        todo.setDueDate(request.getDueDate());
         return toResponse(todoRepository.save(todo));
     }
 
-    public TodoResponseDTO concluir(Long id) {
-        Todo todo = buscarEntidade(id);
-        todo.setConcluido(true);
+    public TodoResponseDTO complete(Long id) {
+        Todo todo = findEntity(id);
+        todo.setCompleted(true);
         return toResponse(todoRepository.save(todo));
     }
 
-    public void deletar(Long id) {
-        buscarEntidade(id);
+    public void delete(Long id) {
+        findEntity(id);
         todoRepository.deleteById(id);
     }
 
-    private Todo buscarEntidade(Long id) {
+    private Todo findEntity(Long id) {
         return todoRepository.findById(id)
                 .orElseThrow(() -> new TodoNotFoundException(id));
     }
@@ -90,11 +90,11 @@ public class TodoService {
     private TodoResponseDTO toResponse(Todo todo) {
         return TodoResponseDTO.builder()
                 .id(todo.getId())
-                .titulo(todo.getTitulo())
-                .descricao(todo.getDescricao())
-                .concluido(todo.isConcluido())
-                .dataCriacao(todo.getDataCriacao())
-                .dataLimite(todo.getDataLimite())
+                .title(todo.getTitle())
+                .description(todo.getDescription())
+                .completed(todo.isCompleted())
+                .createdAt(todo.getCreatedAt())
+                .dueDate(todo.getDueDate())
                 .build();
     }
 }

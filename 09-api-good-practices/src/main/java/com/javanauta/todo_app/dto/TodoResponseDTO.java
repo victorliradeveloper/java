@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
 public class TodoResponseDTO {
 
     private Long id;
-    private String titulo;
-    private String descricao;
-    private boolean concluido;
-    private LocalDateTime dataCriacao;
-    private LocalDateTime dataLimite;
+    private String title;
+    private String description;
+    private boolean completed;
+    private LocalDateTime createdAt;
+    private LocalDateTime dueDate;
 }

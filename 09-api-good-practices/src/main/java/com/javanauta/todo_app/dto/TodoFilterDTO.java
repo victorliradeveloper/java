@@ -14,12 +14,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class TodoFilterDTO {
 
-    private String titulo;
-    private Boolean concluido;
+    private String title;
+    private Boolean completed;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime dataLimiteDe;
+    private LocalDateTime dueDateFrom;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime dataLimiteAte;
+    private LocalDateTime dueDateTo;
 }

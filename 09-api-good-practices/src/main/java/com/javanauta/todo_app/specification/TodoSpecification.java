@@ -10,31 +10,31 @@ public class TodoSpecification {
 
     private TodoSpecification() {}
 
-    public static Specification<Todo> comFiltros(TodoFilterDTO filtro) {
+    public static Specification<Todo> withFilters(TodoFilterDTO filter) {
         return Specification
-                .where(tituloComo(filtro.getTitulo()))
-                .and(concluidoIgual(filtro.getConcluido()))
-                .and(dataLimiteDe(filtro.getDataLimiteDe()))
-                .and(dataLimiteAte(filtro.getDataLimiteAte()));
+                .where(titleLike(filter.getTitle()))
+                .and(completedEquals(filter.getCompleted()))
+                .and(dueDateFrom(filter.getDueDateFrom()))
+                .and(dueDateTo(filter.getDueDateTo()));
     }
 
-    private static Specification<Todo> tituloComo(String titulo) {
-        return (root, query, cb) -> titulo == null || titulo.isBlank() ? null
-                : cb.like(cb.lower(root.get("titulo")), "%" + titulo.toLowerCase() + "%");
+    private static Specification<Todo> titleLike(String title) {
+        return (root, query, cb) -> title == null || title.isBlank() ? null
+                : cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%");
     }
 
-    private static Specification<Todo> concluidoIgual(Boolean concluido) {
-        return (root, query, cb) -> concluido == null ? null
-                : cb.equal(root.get("concluido"), concluido);
+    private static Specification<Todo> completedEquals(Boolean completed) {
+        return (root, query, cb) -> completed == null ? null
+                : cb.equal(root.get("completed"), completed);
     }
 
-    private static Specification<Todo> dataLimiteDe(LocalDateTime de) {
-        return (root, query, cb) -> de == null ? null
-                : cb.greaterThanOrEqualTo(root.get("dataLimite"), de);
+    private static Specification<Todo> dueDateFrom(LocalDateTime from) {
+        return (root, query, cb) -> from == null ? null
+                : cb.greaterThanOrEqualTo(root.get("dueDate"), from);
     }
 
-    private static Specification<Todo> dataLimiteAte(LocalDateTime ate) {
-        return (root, query, cb) -> ate == null ? null
-                : cb.lessThanOrEqualTo(root.get("dataLimite"), ate);
+    private static Specification<Todo> dueDateTo(LocalDateTime to) {
+        return (root, query, cb) -> to == null ? null
+                : cb.lessThanOrEqualTo(root.get("dueDate"), to);
     }
 }

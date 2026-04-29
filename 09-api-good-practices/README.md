@@ -7,6 +7,7 @@ API REST para gerenciamento de tarefas, construída com Spring Boot 3.5 e Postgr
 - Java 21
 - Spring Boot 3.5
 - Spring Data JPA / Hibernate 6
+- Spring Security + JWT (Auth0 java-jwt)
 - PostgreSQL 16
 - Docker / Docker Compose
 
@@ -20,11 +21,82 @@ A API estará disponível em `http://localhost:8080`.
 
 ---
 
+## Autenticação
+
+As rotas de tarefas são protegidas por JWT. Faça o registro ou login para obter o token e envie-o no header de cada requisição:
+
+```
+Authorization: Bearer <token>
+```
+
+---
+
 ## Endpoints
+
+### Autenticação
+
+#### Registrar usuário
+
+```
+POST /api/v1/auth/register
+```
+
+**Body:**
+```json
+{
+  "name": "Victor",
+  "email": "victor@email.com",
+  "password": "123456"
+}
+```
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `name` | string | sim | Nome do usuário |
+| `email` | string | sim | Email válido |
+| `password` | string | sim | Mínimo 6 caracteres |
+
+**Resposta `201 Created`:**
+```json
+{
+  "name": "Victor",
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+---
+
+#### Login
+
+```
+POST /api/v1/auth/login
+```
+
+**Body:**
+```json
+{
+  "email": "victor@email.com",
+  "password": "123456"
+}
+```
+
+**Resposta `200 OK`:**
+```json
+{
+  "name": "Victor",
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+---
+
+### Tarefas
+
+> Todas as rotas abaixo requerem `Authorization: Bearer <token>`.
 
 Base URL: `/api/v1/todos`
 
-### Criar tarefa
+#### Criar tarefa
 
 ```
 POST /api/v1/todos
@@ -33,27 +105,33 @@ POST /api/v1/todos
 **Body:**
 ```json
 {
-  "titulo": "Estudar Spring Boot",
-  "descricao": "Revisar conceitos de JPA",
-  "dataLimite": "2026-05-10T18:00:00"
+  "title": "Estudar Spring Boot",
+  "description": "Revisar conceitos de JPA",
+  "dueDate": "2026-05-10T18:00:00"
 }
 ```
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `title` | string | sim | Título da tarefa |
+| `description` | string | não | Descrição detalhada |
+| `dueDate` | datetime | não | Prazo no formato ISO 8601 |
 
 **Resposta `201 Created`:**
 ```json
 {
   "id": 1,
-  "titulo": "Estudar Spring Boot",
-  "descricao": "Revisar conceitos de JPA",
-  "concluido": false,
-  "dataCriacao": "2026-04-29T10:00:00",
-  "dataLimite": "2026-05-10T18:00:00"
+  "title": "Estudar Spring Boot",
+  "description": "Revisar conceitos de JPA",
+  "completed": false,
+  "createdAt": "2026-04-29T10:00:00",
+  "dueDate": "2026-05-10T18:00:00"
 }
 ```
 
 ---
 
-### Listar tarefas (offset pagination)
+#### Listar tarefas (offset pagination)
 
 ```
 GET /api/v1/todos
@@ -61,26 +139,26 @@ GET /api/v1/todos
 
 **Filtros disponíveis:**
 
-| Parâmetro      | Tipo     | Obrigatório | Descrição                                        |
-|----------------|----------|-------------|--------------------------------------------------|
-| `titulo`       | string   | não         | Busca parcial, case-insensitive                  |
-| `concluido`    | boolean  | não         | Filtra por status (`true`/`false`)               |
-| `dataLimiteDe` | datetime | não         | Tarefas com prazo a partir de (ISO 8601)         |
-| `dataLimiteAte`| datetime | não         | Tarefas com prazo até (ISO 8601)                 |
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| `title` | string | não | Busca parcial, case-insensitive |
+| `completed` | boolean | não | Filtra por status (`true`/`false`) |
+| `dueDateFrom` | datetime | não | Tarefas com prazo a partir de (ISO 8601) |
+| `dueDateTo` | datetime | não | Tarefas com prazo até (ISO 8601) |
 
 **Paginação e ordenação:**
 
-| Parâmetro | Tipo   | Obrigatório | Descrição                                           |
-|-----------|--------|-------------|-----------------------------------------------------|
-| `page`    | int    | não         | Número da página (padrão: `0`)                      |
-| `size`    | int    | não         | Itens por página (padrão: `20`, máximo: `100`)      |
-| `sort`    | string | não         | Campo e direção, ex: `titulo,asc` (padrão: `id,asc`)|
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| `page` | int | não | Número da página (padrão: `0`) |
+| `size` | int | não | Itens por página (padrão: `20`, máximo: `100`) |
+| `sort` | string | não | Campo e direção, ex: `title,asc` (padrão: `id,asc`) |
 
 **Exemplos:**
 ```
-GET /api/v1/todos?titulo=spring&concluido=false
-GET /api/v1/todos?dataLimiteDe=2026-05-01T00:00:00&dataLimiteAte=2026-05-31T23:59:59
-GET /api/v1/todos?concluido=false&sort=dataLimite,asc&page=0&size=10
+GET /api/v1/todos?title=spring&completed=false
+GET /api/v1/todos?dueDateFrom=2026-05-01T00:00:00&dueDateTo=2026-05-31T23:59:59
+GET /api/v1/todos?completed=false&sort=dueDate,asc&page=0&size=10
 ```
 
 **Resposta `200 OK`:**
@@ -89,11 +167,11 @@ GET /api/v1/todos?concluido=false&sort=dataLimite,asc&page=0&size=10
   "content": [
     {
       "id": 1,
-      "titulo": "Estudar Spring Boot",
-      "descricao": "Revisar conceitos de JPA",
-      "concluido": false,
-      "dataCriacao": "2026-04-29T10:00:00",
-      "dataLimite": "2026-05-10T18:00:00"
+      "title": "Estudar Spring Boot",
+      "description": "Revisar conceitos de JPA",
+      "completed": false,
+      "createdAt": "2026-04-29T10:00:00",
+      "dueDate": "2026-05-10T18:00:00"
     }
   ],
   "page": 0,
@@ -106,7 +184,7 @@ GET /api/v1/todos?concluido=false&sort=dataLimite,asc&page=0&size=10
 
 ---
 
-### Listar tarefas (cursor pagination)
+#### Listar tarefas (cursor pagination)
 
 Indicado para grandes volumes de dados ou listagens em tempo real. Não sofre com o problema de drift do offset quando novos registros são inseridos.
 
@@ -115,10 +193,10 @@ GET /api/v1/todos/cursor?size=20
 GET /api/v1/todos/cursor?cursor=20&size=20
 ```
 
-| Parâmetro | Tipo | Obrigatório | Descrição                                              |
-|-----------|------|-------------|--------------------------------------------------------|
-| `cursor`  | Long | não         | ID do último item recebido (omitir para primeira página) |
-| `size`    | int  | não         | Itens por página (padrão: 20)                          |
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| `cursor` | Long | não | ID do último item recebido (omitir para primeira página) |
+| `size` | int | não | Itens por página (padrão: 20) |
 
 **Resposta `200 OK`:**
 ```json
@@ -133,7 +211,7 @@ GET /api/v1/todos/cursor?cursor=20&size=20
 
 ---
 
-### Buscar tarefa por ID
+#### Buscar tarefa por ID
 
 ```
 GET /api/v1/todos/{id}
@@ -144,7 +222,7 @@ GET /api/v1/todos/{id}
 
 ---
 
-### Atualizar tarefa
+#### Atualizar tarefa
 
 ```
 PUT /api/v1/todos/{id}
@@ -156,18 +234,18 @@ PUT /api/v1/todos/{id}
 
 ---
 
-### Concluir tarefa
+#### Concluir tarefa
 
 ```
-PATCH /api/v1/todos/{id}/concluir
+PATCH /api/v1/todos/{id}/complete
 ```
 
-**Resposta `200 OK`:** tarefa com `concluido: true`  
+**Resposta `200 OK`:** tarefa com `completed: true`  
 **Resposta `404 Not Found`:** tarefa não encontrada
 
 ---
 
-### Deletar tarefa
+#### Deletar tarefa
 
 ```
 DELETE /api/v1/todos/{id}
@@ -182,8 +260,10 @@ DELETE /api/v1/todos/{id}
 
 Todos os erros seguem estrutura consistente:
 
-| Status | Situação                        | Exemplo de body                               |
-|--------|---------------------------------|-----------------------------------------------|
-| `400`  | Dados inválidos na requisição   | `{"titulo": "Título é obrigatório"}`          |
-| `404`  | Recurso não encontrado          | `{"erro": "Tarefa não encontrada com id: 1"}` |
-| `500`  | Erro interno inesperado         | `{"erro": "Erro interno. Tente novamente mais tarde."}` |
+| Status | Situação | Exemplo de body |
+|--------|----------|-----------------|
+| `400` | Dados inválidos na requisição | `{"title": "Title is required"}` |
+| `401` | Credenciais inválidas ou token ausente | `{"error": "Invalid email or password"}` |
+| `404` | Recurso não encontrado | `{"error": "Todo not found with id: 1"}` |
+| `409` | Email já cadastrado | `{"error": "User already exists with email: victor@email.com"}` |
+| `500` | Erro interno inesperado | `{"error": "Internal server error. Please try again later."}` |
