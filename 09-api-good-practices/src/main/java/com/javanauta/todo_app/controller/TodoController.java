@@ -1,15 +1,17 @@
 package com.javanauta.todo_app.controller;
 
+import com.javanauta.todo_app.dto.CursorPageResponseDTO;
+import com.javanauta.todo_app.dto.PagedResponseDTO;
 import com.javanauta.todo_app.dto.TodoRequestDTO;
 import com.javanauta.todo_app.dto.TodoResponseDTO;
 import com.javanauta.todo_app.service.TodoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/todos")
@@ -24,12 +26,20 @@ public class TodoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TodoResponseDTO>> listar(
-            @RequestParam(required = false) Boolean concluido) {
+    public ResponseEntity<PagedResponseDTO<TodoResponseDTO>> listar(
+            @RequestParam(required = false) Boolean concluido,
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
         if (concluido != null) {
-            return ResponseEntity.ok(todoService.listarPorStatus(concluido));
+            return ResponseEntity.ok(todoService.listarPorStatusPaginado(concluido, pageable));
         }
-        return ResponseEntity.ok(todoService.listarTodos());
+        return ResponseEntity.ok(todoService.listarPaginado(pageable));
+    }
+
+    @GetMapping("/cursor")
+    public ResponseEntity<CursorPageResponseDTO<TodoResponseDTO>> listarComCursor(
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(todoService.listarComCursor(cursor, size));
     }
 
     @GetMapping("/{id}")
