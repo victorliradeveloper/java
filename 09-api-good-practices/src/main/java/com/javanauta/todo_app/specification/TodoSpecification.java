@@ -2,6 +2,7 @@ package com.javanauta.todo_app.specification;
 
 import com.javanauta.todo_app.dto.TodoFilterDTO;
 import com.javanauta.todo_app.model.Todo;
+import com.javanauta.todo_app.model.User;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
@@ -10,12 +11,17 @@ public class TodoSpecification {
 
     private TodoSpecification() {}
 
-    public static Specification<Todo> withFilters(TodoFilterDTO filter) {
+    public static Specification<Todo> withFilters(TodoFilterDTO filter, User user) {
         return Specification
-                .where(titleLike(filter.getTitle()))
+                .where(userEquals(user))
+                .and(titleLike(filter.getTitle()))
                 .and(completedEquals(filter.getCompleted()))
                 .and(dueDateFrom(filter.getDueDateFrom()))
                 .and(dueDateTo(filter.getDueDateTo()));
+    }
+
+    private static Specification<Todo> userEquals(User user) {
+        return (root, query, cb) -> cb.equal(root.get("user"), user);
     }
 
     private static Specification<Todo> titleLike(String title) {

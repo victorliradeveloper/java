@@ -7,14 +7,20 @@ import com.javanauta.todo_app.dto.TodoFilterDTO;
 import com.javanauta.todo_app.dto.TodoRequestDTO;
 import com.javanauta.todo_app.dto.TodoResponseDTO;
 import com.javanauta.todo_app.exception.TodoNotFoundException;
+import com.javanauta.todo_app.model.User;
 import com.javanauta.todo_app.service.TodoService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -25,7 +31,10 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(TodoController.class)
+@WebMvcTest(value = TodoController.class, excludeAutoConfiguration = {
+        SecurityAutoConfiguration.class,
+        SecurityFilterAutoConfiguration.class
+})
 class TodoControllerTest {
 
     @Autowired
@@ -39,10 +48,18 @@ class TodoControllerTest {
 
     private TodoResponseDTO response;
     private TodoRequestDTO request;
+    private User mockUser;
 
     @BeforeEach
     void setUp() {
         LocalDateTime now = LocalDateTime.now();
+
+        mockUser = User.builder()
+                .id(1L).name("Test").email("test@email.com").password("hash")
+                .build();
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(mockUser, null, List.of()));
 
         response = TodoResponseDTO.builder()
                 .id(1L)
@@ -56,13 +73,18 @@ class TodoControllerTest {
         request = new TodoRequestDTO("Study Java", "Review streams", now.plusDays(3));
     }
 
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     // -------------------------------------------------------------------------
     // POST /api/v1/todos
     // -------------------------------------------------------------------------
 
     @Test
     void create_withValidData_shouldReturn201() throws Exception {
-        when(todoService.create(any(TodoRequestDTO.class))).thenReturn(response);
+        when(todoService.create(any(User.class), any(TodoRequestDTO.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/todos")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -82,7 +104,7 @@ class TodoControllerTest {
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
 
-        verify(todoService, never()).create(any());
+        verify(todoService, never()).create(any(), any());
     }
 
     // -------------------------------------------------------------------------
@@ -95,7 +117,7 @@ class TodoControllerTest {
                 .content(List.of(response))
                 .page(0).size(20).totalElements(1).totalPages(1).last(true)
                 .build();
-        when(todoService.findAll(any(TodoFilterDTO.class), any(Pageable.class))).thenReturn(paged);
+        when(todoService.findAll(any(User.class), any(TodoFilterDTO.class), any(Pageable.class))).thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/todos"))
                 .andExpect(status().isOk())
@@ -109,7 +131,7 @@ class TodoControllerTest {
                 .content(List.of(response))
                 .page(0).size(20).totalElements(1).totalPages(1).last(true)
                 .build();
-        when(todoService.findAll(any(TodoFilterDTO.class), any(Pageable.class))).thenReturn(paged);
+        when(todoService.findAll(any(User.class), any(TodoFilterDTO.class), any(Pageable.class))).thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/todos").param("title", "Study"))
                 .andExpect(status().isOk())
@@ -124,7 +146,7 @@ class TodoControllerTest {
                 .content(List.of(completed))
                 .page(0).size(20).totalElements(1).totalPages(1).last(true)
                 .build();
-        when(todoService.findAll(any(TodoFilterDTO.class), any(Pageable.class))).thenReturn(paged);
+        when(todoService.findAll(any(User.class), any(TodoFilterDTO.class), any(Pageable.class))).thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/todos").param("completed", "true"))
                 .andExpect(status().isOk())
@@ -142,7 +164,7 @@ class TodoControllerTest {
                 .nextCursor(null)
                 .hasNext(false)
                 .build();
-        when(todoService.listWithCursor(isNull(), eq(20))).thenReturn(cursorPage);
+        when(todoService.listWithCursor(any(User.class), isNull(), eq(20))).thenReturn(cursorPage);
 
         mockMvc.perform(get("/api/v1/todos/cursor"))
                 .andExpect(status().isOk())
@@ -157,7 +179,7 @@ class TodoControllerTest {
                 .nextCursor(10L)
                 .hasNext(true)
                 .build();
-        when(todoService.listWithCursor(eq(5L), eq(20))).thenReturn(cursorPage);
+        when(todoService.listWithCursor(any(User.class), eq(5L), eq(20))).thenReturn(cursorPage);
 
         mockMvc.perform(get("/api/v1/todos/cursor").param("cursor", "5"))
                 .andExpect(status().isOk())
@@ -171,7 +193,7 @@ class TodoControllerTest {
 
     @Test
     void getById_whenExists_shouldReturn200() throws Exception {
-        when(todoService.getById(1L)).thenReturn(response);
+        when(todoService.getById(any(User.class), eq(1L))).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/todos/1"))
                 .andExpect(status().isOk())
@@ -181,7 +203,7 @@ class TodoControllerTest {
 
     @Test
     void getById_whenNotExists_shouldReturn404() throws Exception {
-        when(todoService.getById(99L)).thenThrow(new TodoNotFoundException(99L));
+        when(todoService.getById(any(User.class), eq(99L))).thenThrow(new TodoNotFoundException(99L));
 
         mockMvc.perform(get("/api/v1/todos/99"))
                 .andExpect(status().isNotFound());
@@ -193,7 +215,7 @@ class TodoControllerTest {
 
     @Test
     void update_withValidData_shouldReturn200() throws Exception {
-        when(todoService.update(eq(1L), any(TodoRequestDTO.class))).thenReturn(response);
+        when(todoService.update(any(User.class), eq(1L), any(TodoRequestDTO.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/todos/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -204,7 +226,7 @@ class TodoControllerTest {
 
     @Test
     void update_whenNotExists_shouldReturn404() throws Exception {
-        when(todoService.update(eq(99L), any())).thenThrow(new TodoNotFoundException(99L));
+        when(todoService.update(any(User.class), eq(99L), any())).thenThrow(new TodoNotFoundException(99L));
 
         mockMvc.perform(put("/api/v1/todos/99")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -220,7 +242,7 @@ class TodoControllerTest {
     void complete_whenExists_shouldReturn200() throws Exception {
         TodoResponseDTO completed = TodoResponseDTO.builder()
                 .id(1L).title("Study Java").completed(true).createdAt(LocalDateTime.now()).build();
-        when(todoService.complete(1L)).thenReturn(completed);
+        when(todoService.complete(any(User.class), eq(1L))).thenReturn(completed);
 
         mockMvc.perform(patch("/api/v1/todos/1/complete"))
                 .andExpect(status().isOk())
@@ -229,7 +251,7 @@ class TodoControllerTest {
 
     @Test
     void complete_whenNotExists_shouldReturn404() throws Exception {
-        when(todoService.complete(99L)).thenThrow(new TodoNotFoundException(99L));
+        when(todoService.complete(any(User.class), eq(99L))).thenThrow(new TodoNotFoundException(99L));
 
         mockMvc.perform(patch("/api/v1/todos/99/complete"))
                 .andExpect(status().isNotFound());
@@ -241,7 +263,7 @@ class TodoControllerTest {
 
     @Test
     void delete_whenExists_shouldReturn204() throws Exception {
-        doNothing().when(todoService).delete(1L);
+        doNothing().when(todoService).delete(any(User.class), eq(1L));
 
         mockMvc.perform(delete("/api/v1/todos/1"))
                 .andExpect(status().isNoContent());
@@ -249,7 +271,7 @@ class TodoControllerTest {
 
     @Test
     void delete_whenNotExists_shouldReturn404() throws Exception {
-        doThrow(new TodoNotFoundException(99L)).when(todoService).delete(99L);
+        doThrow(new TodoNotFoundException(99L)).when(todoService).delete(any(User.class), eq(99L));
 
         mockMvc.perform(delete("/api/v1/todos/99"))
                 .andExpect(status().isNotFound());

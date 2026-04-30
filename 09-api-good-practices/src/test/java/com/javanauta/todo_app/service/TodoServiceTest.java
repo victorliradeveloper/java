@@ -7,6 +7,7 @@ import com.javanauta.todo_app.dto.TodoRequestDTO;
 import com.javanauta.todo_app.dto.TodoResponseDTO;
 import com.javanauta.todo_app.exception.TodoNotFoundException;
 import com.javanauta.todo_app.model.Todo;
+import com.javanauta.todo_app.model.User;
 import com.javanauta.todo_app.repository.TodoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,8 +28,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,9 +42,14 @@ class TodoServiceTest {
 
     private Todo todo;
     private TodoRequestDTO request;
+    private User mockUser;
 
     @BeforeEach
     void setUp() {
+        mockUser = User.builder()
+                .id(1L).name("Test").email("test@email.com").password("hash")
+                .build();
+
         todo = Todo.builder()
                 .id(1L)
                 .title("Study Java")
@@ -52,6 +57,7 @@ class TodoServiceTest {
                 .completed(false)
                 .createdAt(LocalDateTime.now())
                 .dueDate(LocalDateTime.now().plusDays(3))
+                .user(mockUser)
                 .build();
 
         request = new TodoRequestDTO("Study Java", "Review streams and lambdas", LocalDateTime.now().plusDays(3));
@@ -65,7 +71,7 @@ class TodoServiceTest {
     void create_shouldReturnCreatedTodo() {
         when(todoRepository.save(any(Todo.class))).thenReturn(todo);
 
-        TodoResponseDTO response = todoService.create(request);
+        TodoResponseDTO response = todoService.create(mockUser, request);
 
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getTitle()).isEqualTo("Study Java");
@@ -81,11 +87,12 @@ class TodoServiceTest {
     @Test
     void findAll_withoutFilters_shouldReturnAllItems() {
         Pageable pageable = PageRequest.of(0, 20);
-        Todo other = Todo.builder().id(2L).title("Other").completed(true).createdAt(LocalDateTime.now()).build();
+        Todo other = Todo.builder().id(2L).title("Other").completed(true)
+                .createdAt(LocalDateTime.now()).user(mockUser).build();
         Page<Todo> page = new PageImpl<>(List.of(todo, other), pageable, 2);
         when(todoRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(new TodoFilterDTO(), pageable);
+        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(mockUser, new TodoFilterDTO(), pageable);
 
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getTotalElements()).isEqualTo(2);
@@ -95,14 +102,15 @@ class TodoServiceTest {
     @Test
     void findAll_withCompletedFilter_shouldReturnOnlyCompletedItems() {
         Pageable pageable = PageRequest.of(0, 20);
-        Todo completed = Todo.builder().id(2L).title("Done").completed(true).createdAt(LocalDateTime.now()).build();
+        Todo completed = Todo.builder().id(2L).title("Done").completed(true)
+                .createdAt(LocalDateTime.now()).user(mockUser).build();
         Page<Todo> page = new PageImpl<>(List.of(completed), pageable, 1);
         when(todoRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
         TodoFilterDTO filter = new TodoFilterDTO();
         filter.setCompleted(true);
 
-        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(filter, pageable);
+        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(mockUser, filter, pageable);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).isCompleted()).isTrue();
@@ -117,7 +125,7 @@ class TodoServiceTest {
         TodoFilterDTO filter = new TodoFilterDTO();
         filter.setTitle("Study");
 
-        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(filter, pageable);
+        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(mockUser, filter, pageable);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getTitle()).contains("Study");
@@ -129,7 +137,7 @@ class TodoServiceTest {
         Page<Todo> page = new PageImpl<>(List.of(), pageable, 0);
         when(todoRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(new TodoFilterDTO(), pageable);
+        PagedResponseDTO<TodoResponseDTO> result = todoService.findAll(mockUser, new TodoFilterDTO(), pageable);
 
         assertThat(result.getContent()).isEmpty();
         assertThat(result.getTotalElements()).isEqualTo(0);
@@ -141,10 +149,12 @@ class TodoServiceTest {
 
     @Test
     void listWithCursor_withoutCursor_shouldReturnFirstPage() {
-        Todo todo2 = Todo.builder().id(2L).title("Second").completed(false).createdAt(LocalDateTime.now()).build();
-        when(todoRepository.findWithCursor(null, PageRequest.of(0, 21))).thenReturn(List.of(todo, todo2));
+        Todo todo2 = Todo.builder().id(2L).title("Second").completed(false)
+                .createdAt(LocalDateTime.now()).user(mockUser).build();
+        when(todoRepository.findWithCursor(eq(mockUser), isNull(), eq(PageRequest.of(0, 21))))
+                .thenReturn(List.of(todo, todo2));
 
-        CursorPageResponseDTO<TodoResponseDTO> result = todoService.listWithCursor(null, 20);
+        CursorPageResponseDTO<TodoResponseDTO> result = todoService.listWithCursor(mockUser, null, 20);
 
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.isHasNext()).isFalse();
@@ -155,11 +165,13 @@ class TodoServiceTest {
     void listWithCursor_withMoreItemsThanSize_shouldReturnNextCursor() {
         List<Todo> todos = new ArrayList<>();
         for (int i = 1; i <= 3; i++) {
-            todos.add(Todo.builder().id((long) i).title("Todo " + i).completed(false).createdAt(LocalDateTime.now()).build());
+            todos.add(Todo.builder().id((long) i).title("Todo " + i).completed(false)
+                    .createdAt(LocalDateTime.now()).user(mockUser).build());
         }
-        when(todoRepository.findWithCursor(0L, PageRequest.of(0, 3))).thenReturn(todos);
+        when(todoRepository.findWithCursor(eq(mockUser), eq(0L), eq(PageRequest.of(0, 3))))
+                .thenReturn(todos);
 
-        CursorPageResponseDTO<TodoResponseDTO> result = todoService.listWithCursor(0L, 2);
+        CursorPageResponseDTO<TodoResponseDTO> result = todoService.listWithCursor(mockUser, 0L, 2);
 
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.isHasNext()).isTrue();
@@ -174,7 +186,7 @@ class TodoServiceTest {
     void getById_whenExists_shouldReturnTodo() {
         when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
 
-        TodoResponseDTO response = todoService.getById(1L);
+        TodoResponseDTO response = todoService.getById(mockUser, 1L);
 
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getTitle()).isEqualTo("Study Java");
@@ -184,7 +196,7 @@ class TodoServiceTest {
     void getById_whenNotExists_shouldThrowTodoNotFoundException() {
         when(todoRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> todoService.getById(99L))
+        assertThatThrownBy(() -> todoService.getById(mockUser, 99L))
                 .isInstanceOf(TodoNotFoundException.class)
                 .hasMessageContaining("99");
     }
@@ -199,7 +211,7 @@ class TodoServiceTest {
         when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
         when(todoRepository.save(any(Todo.class))).thenReturn(todo);
 
-        TodoResponseDTO response = todoService.update(1L, newRequest);
+        TodoResponseDTO response = todoService.update(mockUser, 1L, newRequest);
 
         assertThat(response).isNotNull();
         verify(todoRepository).save(todo);
@@ -209,7 +221,7 @@ class TodoServiceTest {
     void update_whenNotExists_shouldThrowTodoNotFoundException() {
         when(todoRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> todoService.update(99L, request))
+        assertThatThrownBy(() -> todoService.update(mockUser, 99L, request))
                 .isInstanceOf(TodoNotFoundException.class)
                 .hasMessageContaining("99");
 
@@ -229,7 +241,7 @@ class TodoServiceTest {
             return t;
         });
 
-        TodoResponseDTO response = todoService.complete(1L);
+        TodoResponseDTO response = todoService.complete(mockUser, 1L);
 
         assertThat(response.isCompleted()).isTrue();
         verify(todoRepository).save(todo);
@@ -239,7 +251,7 @@ class TodoServiceTest {
     void complete_whenNotExists_shouldThrowTodoNotFoundException() {
         when(todoRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> todoService.complete(99L))
+        assertThatThrownBy(() -> todoService.complete(mockUser, 99L))
                 .isInstanceOf(TodoNotFoundException.class)
                 .hasMessageContaining("99");
     }
@@ -252,7 +264,7 @@ class TodoServiceTest {
     void delete_whenExists_shouldDeleteWithoutError() {
         when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
 
-        todoService.delete(1L);
+        todoService.delete(mockUser, 1L);
 
         verify(todoRepository).deleteById(1L);
     }
@@ -261,7 +273,7 @@ class TodoServiceTest {
     void delete_whenNotExists_shouldThrowTodoNotFoundException() {
         when(todoRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> todoService.delete(99L))
+        assertThatThrownBy(() -> todoService.delete(mockUser, 99L))
                 .isInstanceOf(TodoNotFoundException.class)
                 .hasMessageContaining("99");
 

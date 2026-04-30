@@ -7,6 +7,7 @@ import com.javanauta.todo_app.dto.TodoRequestDTO;
 import com.javanauta.todo_app.dto.TodoResponseDTO;
 import com.javanauta.todo_app.exception.TodoNotFoundException;
 import com.javanauta.todo_app.model.Todo;
+import com.javanauta.todo_app.model.User;
 import com.javanauta.todo_app.repository.TodoRepository;
 import com.javanauta.todo_app.specification.TodoSpecification;
 import lombok.RequiredArgsConstructor;
@@ -23,21 +24,22 @@ public class TodoService {
 
     private final TodoRepository todoRepository;
 
-    public TodoResponseDTO create(TodoRequestDTO request) {
+    public TodoResponseDTO create(User user, TodoRequestDTO request) {
         Todo todo = Todo.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .dueDate(request.getDueDate())
+                .user(user)
                 .build();
         return toResponse(todoRepository.save(todo));
     }
 
-    public PagedResponseDTO<TodoResponseDTO> findAll(TodoFilterDTO filter, Pageable pageable) {
-        return toPagedResponse(todoRepository.findAll(TodoSpecification.withFilters(filter), pageable));
+    public PagedResponseDTO<TodoResponseDTO> findAll(User user, TodoFilterDTO filter, Pageable pageable) {
+        return toPagedResponse(todoRepository.findAll(TodoSpecification.withFilters(filter, user), pageable));
     }
 
-    public CursorPageResponseDTO<TodoResponseDTO> listWithCursor(Long cursor, int size) {
-        List<Todo> todos = todoRepository.findWithCursor(cursor, PageRequest.of(0, size + 1));
+    public CursorPageResponseDTO<TodoResponseDTO> listWithCursor(User user, Long cursor, int size) {
+        List<Todo> todos = todoRepository.findWithCursor(user, cursor, PageRequest.of(0, size + 1));
         boolean hasNext = todos.size() > size;
         List<Todo> content = hasNext ? todos.subList(0, size) : todos;
         Long nextCursor = hasNext ? content.get(content.size() - 1).getId() : null;
@@ -48,31 +50,32 @@ public class TodoService {
                 .build();
     }
 
-    public TodoResponseDTO getById(Long id) {
-        return toResponse(findEntity(id));
+    public TodoResponseDTO getById(User user, Long id) {
+        return toResponse(findEntity(id, user));
     }
 
-    public TodoResponseDTO update(Long id, TodoRequestDTO request) {
-        Todo todo = findEntity(id);
+    public TodoResponseDTO update(User user, Long id, TodoRequestDTO request) {
+        Todo todo = findEntity(id, user);
         todo.setTitle(request.getTitle());
         todo.setDescription(request.getDescription());
         todo.setDueDate(request.getDueDate());
         return toResponse(todoRepository.save(todo));
     }
 
-    public TodoResponseDTO complete(Long id) {
-        Todo todo = findEntity(id);
+    public TodoResponseDTO complete(User user, Long id) {
+        Todo todo = findEntity(id, user);
         todo.setCompleted(true);
         return toResponse(todoRepository.save(todo));
     }
 
-    public void delete(Long id) {
-        findEntity(id);
+    public void delete(User user, Long id) {
+        findEntity(id, user);
         todoRepository.deleteById(id);
     }
 
-    private Todo findEntity(Long id) {
+    private Todo findEntity(Long id, User user) {
         return todoRepository.findById(id)
+                .filter(todo -> todo.getUser().getId().equals(user.getId()))
                 .orElseThrow(() -> new TodoNotFoundException(id));
     }
 
