@@ -5,6 +5,7 @@ import com.javanauta.todo_app.dto.request.RegisterRequestDTO;
 import com.javanauta.todo_app.dto.response.AuthResponseDTO;
 import com.javanauta.todo_app.exception.InvalidCredentialsException;
 import com.javanauta.todo_app.exception.UserAlreadyExistsException;
+import com.javanauta.todo_app.mapper.AuthMapper;
 import com.javanauta.todo_app.model.User;
 import com.javanauta.todo_app.repository.UserRepository;
 import com.javanauta.todo_app.security.JwtService;
@@ -19,18 +20,14 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuthMapper authMapper;
 
     public AuthResponseDTO register(RegisterRequestDTO request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new UserAlreadyExistsException(request.email());
         }
-        User user = User.builder()
-                .name(request.name())
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
-                .build();
-        userRepository.save(user);
-        return new AuthResponseDTO(user.getName(), jwtService.generateToken(user));
+        User user = userRepository.save(authMapper.toEntity(request, passwordEncoder.encode(request.password())));
+        return authMapper.toResponse(user, jwtService.generateToken(user));
     }
 
     public AuthResponseDTO login(LoginRequestDTO request) {
@@ -39,6 +36,6 @@ public class AuthService {
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new InvalidCredentialsException();
         }
-        return new AuthResponseDTO(user.getName(), jwtService.generateToken(user));
+        return authMapper.toResponse(user, jwtService.generateToken(user));
     }
 }
