@@ -1,6 +1,6 @@
 package com.javanauta.todo_app.specification;
 
-import com.javanauta.todo_app.dto.TodoFilterDTO;
+import com.javanauta.todo_app.dto.request.TodoFilterDTO;
 import com.javanauta.todo_app.model.Todo;
 import com.javanauta.todo_app.model.User;
 import org.springframework.data.jpa.domain.Specification;

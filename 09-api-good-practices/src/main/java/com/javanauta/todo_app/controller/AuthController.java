@@ -1,9 +1,9 @@
 package com.javanauta.todo_app.controller;
 
-import com.javanauta.todo_app.dto.AuthResponseDTO;
-import com.javanauta.todo_app.dto.ErrorResponseDTO;
-import com.javanauta.todo_app.dto.LoginRequestDTO;
-import com.javanauta.todo_app.dto.RegisterRequestDTO;
+import com.javanauta.todo_app.dto.request.LoginRequestDTO;
+import com.javanauta.todo_app.dto.request.RegisterRequestDTO;
+import com.javanauta.todo_app.dto.response.AuthResponseDTO;
+import com.javanauta.todo_app.dto.response.ErrorResponseDTO;
 import com.javanauta.todo_app.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

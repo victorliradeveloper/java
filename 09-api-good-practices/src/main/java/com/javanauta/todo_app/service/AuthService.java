@@ -1,8 +1,8 @@
 package com.javanauta.todo_app.service;
 
-import com.javanauta.todo_app.dto.AuthResponseDTO;
-import com.javanauta.todo_app.dto.LoginRequestDTO;
-import com.javanauta.todo_app.dto.RegisterRequestDTO;
+import com.javanauta.todo_app.dto.request.LoginRequestDTO;
+import com.javanauta.todo_app.dto.request.RegisterRequestDTO;
+import com.javanauta.todo_app.dto.response.AuthResponseDTO;
 import com.javanauta.todo_app.exception.InvalidCredentialsException;
 import com.javanauta.todo_app.exception.UserAlreadyExistsException;
 import com.javanauta.todo_app.model.User;

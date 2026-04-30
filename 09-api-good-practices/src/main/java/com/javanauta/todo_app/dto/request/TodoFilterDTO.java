@@ -1,4 +1,4 @@
-package com.javanauta.todo_app.dto;
+package com.javanauta.todo_app.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

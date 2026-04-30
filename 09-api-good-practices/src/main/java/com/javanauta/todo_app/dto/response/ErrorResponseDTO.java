@@ -1,4 +1,4 @@
-package com.javanauta.todo_app.dto;
+package com.javanauta.todo_app.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

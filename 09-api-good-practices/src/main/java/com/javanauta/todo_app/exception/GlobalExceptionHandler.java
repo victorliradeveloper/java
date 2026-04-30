@@ -1,6 +1,6 @@
 package com.javanauta.todo_app.exception;
 
-import com.javanauta.todo_app.dto.ErrorResponseDTO;
+import com.javanauta.todo_app.dto.response.ErrorResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

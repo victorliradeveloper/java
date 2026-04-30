@@ -1,10 +1,10 @@
 package com.javanauta.todo_app.service;
 
-import com.javanauta.todo_app.dto.CursorPageResponseDTO;
-import com.javanauta.todo_app.dto.PagedResponseDTO;
-import com.javanauta.todo_app.dto.TodoFilterDTO;
-import com.javanauta.todo_app.dto.TodoRequestDTO;
-import com.javanauta.todo_app.dto.TodoResponseDTO;
+import com.javanauta.todo_app.dto.request.TodoFilterDTO;
+import com.javanauta.todo_app.dto.request.TodoRequestDTO;
+import com.javanauta.todo_app.dto.response.CursorPageResponseDTO;
+import com.javanauta.todo_app.dto.response.PagedResponseDTO;
+import com.javanauta.todo_app.dto.response.TodoResponseDTO;
 import com.javanauta.todo_app.exception.TodoNotFoundException;
 import com.javanauta.todo_app.model.Todo;
 import com.javanauta.todo_app.model.User;
