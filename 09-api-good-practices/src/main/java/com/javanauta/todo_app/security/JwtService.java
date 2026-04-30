@@ -3,14 +3,16 @@ package com.javanauta.todo_app.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.javanauta.todo_app.model.User;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
-@Service
+@Component
 public class JwtService {
 
     @Value("${jwt.secret}")
@@ -29,15 +31,14 @@ public class JwtService {
                 .sign(Algorithm.HMAC256(secret));
     }
 
-    public String validateToken(String token) {
+    public Optional<DecodedJWT> validateToken(String token) {
         try {
-            return JWT.require(Algorithm.HMAC256(secret))
+            return Optional.of(JWT.require(Algorithm.HMAC256(secret))
                     .withIssuer("todo-app")
                     .build()
-                    .verify(token)
-                    .getSubject();
+                    .verify(token));
         } catch (JWTVerificationException e) {
-            return null;
+            return Optional.empty();
         }
     }
 }

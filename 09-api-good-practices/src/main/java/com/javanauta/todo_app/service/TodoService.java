@@ -17,6 +17,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,14 +28,17 @@ public class TodoService {
     private final TodoRepository todoRepository;
     private final TodoMapper todoMapper;
 
+    @Transactional
     public TodoResponseDTO create(User user, TodoRequestDTO request) {
         return todoMapper.toResponse(todoRepository.save(todoMapper.toEntity(request, user)));
     }
 
+    @Transactional(readOnly = true)
     public PagedResponseDTO<TodoResponseDTO> findAll(User user, TodoFilterDTO filter, Pageable pageable) {
         return todoMapper.toPagedResponse(todoRepository.findAll(TodoSpecification.withFilters(filter, user), pageable));
     }
 
+    @Transactional(readOnly = true)
     public CursorPageResponseDTO<TodoResponseDTO> listWithCursor(User user, Long cursor, int size) {
         List<Todo> todos = todoRepository.findWithCursor(user, cursor, PageRequest.of(0, size + 1));
         boolean hasNext = todos.size() > size;
@@ -43,20 +47,21 @@ public class TodoService {
         return todoMapper.toCursorResponse(content, nextCursor, hasNext);
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(cacheNames = "todos", key = "#user.id + ':' + #id")
     public TodoResponseDTO getById(User user, Long id) {
         return todoMapper.toResponse(findEntity(id, user));
     }
 
+    @Transactional
     @CacheEvict(cacheNames = "todos", key = "#user.id + ':' + #id")
     public TodoResponseDTO update(User user, Long id, TodoRequestDTO request) {
         Todo todo = findEntity(id, user);
-        todo.setTitle(request.getTitle());
-        todo.setDescription(request.getDescription());
-        todo.setDueDate(request.getDueDate());
+        todoMapper.updateEntity(request, todo);
         return todoMapper.toResponse(todoRepository.save(todo));
     }
 
+    @Transactional
     @CacheEvict(cacheNames = "todos", key = "#user.id + ':' + #id")
     public TodoResponseDTO complete(User user, Long id) {
         Todo todo = findEntity(id, user);
@@ -64,6 +69,7 @@ public class TodoService {
         return todoMapper.toResponse(todoRepository.save(todo));
     }
 
+    @Transactional
     @CacheEvict(cacheNames = "todos", key = "#user.id + ':' + #id")
     public void delete(User user, Long id) {
         findEntity(id, user);

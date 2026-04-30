@@ -26,7 +26,7 @@ public class CacheConfig {
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .activateDefaultTyping(
                         BasicPolymorphicTypeValidator.builder()
-                                .allowIfBaseType(Object.class)
+                                .allowIfSubType("com.javanauta.todo_app.")
                                 .build(),
                         ObjectMapper.DefaultTyping.NON_FINAL
                 );

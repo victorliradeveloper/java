@@ -45,6 +45,12 @@ public class TodoMapper {
                 .build();
     }
 
+    public void updateEntity(TodoRequestDTO request, Todo todo) {
+        todo.setTitle(request.getTitle());
+        todo.setDescription(request.getDescription());
+        todo.setDueDate(request.getDueDate());
+    }
+
     public CursorPageResponseDTO<TodoResponseDTO> toCursorResponse(List<Todo> content, Long nextCursor, boolean hasNext) {
         return CursorPageResponseDTO.<TodoResponseDTO>builder()
                 .content(content.stream().map(this::toResponse).toList())

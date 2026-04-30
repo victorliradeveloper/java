@@ -1,7 +1,7 @@
 package com.javanauta.todo_app.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.javanauta.todo_app.dto.ErrorResponseDTO;
+import com.javanauta.todo_app.dto.response.ErrorResponseDTO;
 import com.javanauta.todo_app.model.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
