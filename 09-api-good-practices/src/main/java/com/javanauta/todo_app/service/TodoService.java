@@ -11,6 +11,8 @@ import com.javanauta.todo_app.model.User;
 import com.javanauta.todo_app.repository.TodoRepository;
 import com.javanauta.todo_app.specification.TodoSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -50,10 +52,12 @@ public class TodoService {
                 .build();
     }
 
+    @Cacheable(cacheNames = "todos", key = "#user.id + ':' + #id")
     public TodoResponseDTO getById(User user, Long id) {
         return toResponse(findEntity(id, user));
     }
 
+    @CacheEvict(cacheNames = "todos", key = "#user.id + ':' + #id")
     public TodoResponseDTO update(User user, Long id, TodoRequestDTO request) {
         Todo todo = findEntity(id, user);
         todo.setTitle(request.getTitle());
@@ -62,12 +66,14 @@ public class TodoService {
         return toResponse(todoRepository.save(todo));
     }
 
+    @CacheEvict(cacheNames = "todos", key = "#user.id + ':' + #id")
     public TodoResponseDTO complete(User user, Long id) {
         Todo todo = findEntity(id, user);
         todo.setCompleted(true);
         return toResponse(todoRepository.save(todo));
     }
 
+    @CacheEvict(cacheNames = "todos", key = "#user.id + ':' + #id")
     public void delete(User user, Long id) {
         findEntity(id, user);
         todoRepository.deleteById(id);
