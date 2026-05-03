@@ -3,12 +3,29 @@ package br.com.giulianabezerra.client_service_restclient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpRequest;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.client.OAuth2ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestClient;
 
 @Configuration
 public class RestClientOauthConfig {
+
+/*  @Bean
+  OAuth2AuthorizedClientManager authorizedClientManager(
+      ClientRegistrationRepository clientRegistrationRepository,
+      OAuth2AuthorizedClientService authorizedClientService) {
+    var authorizedClientProvider = OAuth2AuthorizedClientProviderBuilder.builder()
+        .clientCredentials()
+        .build();
+    var authorizedClientManager = new AuthorizedClientServiceOAuth2AuthorizedClientManager(
+        clientRegistrationRepository, authorizedClientService);
+    authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
+    return authorizedClientManager;
+  }*/
 
   @Bean
   RestClient keycloakRestClientOauth(RestClient.Builder builder,

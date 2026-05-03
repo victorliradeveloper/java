@@ -10,8 +10,8 @@ spring:
         registration:
           keycloak:
             provider: keycloak
-            client-id: cliente
-            client-secret: cBfBupncSZGm13AB6YIbwMUvrCaxddBf
+            client-id: client-service
+            client-secret: k78xozdZa86EotJaZZBnHENLKmLxkBiE
             authorization-grant-type: client_credentials
         provider:
           keycloak:
