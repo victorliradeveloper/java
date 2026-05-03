@@ -1,0 +1,14 @@
+{
+  "realm": "login-system",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "login-client",
+      "name": "Login Client",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": false
+    }
+  ]
+}
