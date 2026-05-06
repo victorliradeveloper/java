@@ -12,6 +12,7 @@ public class AuthorDocument {
     @Id
     private String id;
 
+    // Cria um índice único no MongoDB para o campo "name", impedindo nomes duplicados e acelerando buscas por esse campo.
     @Indexed(unique = true)
     private String name;
 

@@ -1,0 +1,177 @@
+{
+  "info": {
+    "name": "Bookstore - Spring MongoDB",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authors",
+      "item": [
+        {
+          "name": "Get All Authors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/authors",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "authors"]
+            }
+          }
+        },
+        {
+          "name": "Create Author",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/authors",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "authors"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Robert C. Martin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Author",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/authors/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "authors", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<author-id>"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Publishers",
+      "item": [
+        {
+          "name": "Get All Publishers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/publishers",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "publishers"]
+            }
+          }
+        },
+        {
+          "name": "Create Publisher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/publishers",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "publishers"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pearson Education\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Publisher",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/publishers/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "publishers", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<publisher-id>"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "item": [
+        {
+          "name": "Get All Books",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "books"]
+            }
+          }
+        },
+        {
+          "name": "Create Book",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "books"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Clean Code\",\n  \"publisherId\": \"<publisher-id>\",\n  \"authorIds\": [\"<author-id>\"],\n  \"reviewComment\": \"A must-read for every developer.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Book",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/books/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "books", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<book-id>"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
