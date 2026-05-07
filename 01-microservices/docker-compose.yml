@@ -38,6 +38,19 @@ services:
       retries: 5
       start_period: 20s
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   eureka-server:
     build: ./eureka-server
     container_name: eureka-server
@@ -98,10 +111,13 @@ services:
     container_name: api-gateway
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATA_REDIS_HOST: redis
     ports:
       - "8090:8080"
     depends_on:
       eureka-server:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - microservices-net
