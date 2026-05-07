@@ -1,0 +1,326 @@
+{
+  "info": {
+    "name": "Bookstore PostgreSQL",
+    "_postman_id": "bookstore-postgresql-collection",
+    "description": "REST API collection for the Bookstore JPA project using Spring Boot 3.3.0 and PostgreSQL.\n\nOrder of use:\n1. Create Publisher\n2. Create Author\n3. Create Book (using publisherId and authorId from steps above)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "bookId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "publisherId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "authorId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Publishers",
+      "item": [
+        {
+          "name": "Get All Publishers",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/publishers",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "publishers"]
+            },
+            "description": "Returns all publishers."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "[\n  {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"name\": \"Prentice Hall\"\n  }\n]",
+              "_postman_previewlanguage": "json"
+            }
+          ]
+        },
+        {
+          "name": "Create Publisher",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('publisherId', json.id);",
+                  "    console.log('publisherId saved:', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Prentice Hall\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/publishers",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "publishers"]
+            },
+            "description": "Creates a new publisher. The `publisherId` is automatically saved to the collection variable."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n  \"name\": \"Prentice Hall\"\n}",
+              "_postman_previewlanguage": "json"
+            }
+          ]
+        },
+        {
+          "name": "Delete Publisher",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/publishers/{{publisherId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "publishers", "{{publisherId}}"]
+            },
+            "description": "Deletes a publisher by UUID."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "text/plain" }],
+              "body": "Publisher deleted successfully.",
+              "_postman_previewlanguage": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Authors",
+      "item": [
+        {
+          "name": "Get All Authors",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/authors",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "authors"]
+            },
+            "description": "Returns all authors."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "[\n  {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440002\",\n    \"name\": \"Robert C. Martin\"\n  }\n]",
+              "_postman_previewlanguage": "json"
+            }
+          ]
+        },
+        {
+          "name": "Create Author",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('authorId', json.id);",
+                  "    console.log('authorId saved:', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Robert C. Martin\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/authors",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "authors"]
+            },
+            "description": "Creates a new author. The `authorId` is automatically saved to the collection variable."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440002\",\n  \"name\": \"Robert C. Martin\"\n}",
+              "_postman_previewlanguage": "json"
+            }
+          ]
+        },
+        {
+          "name": "Delete Author",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/authors/{{authorId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "authors", "{{authorId}}"]
+            },
+            "description": "Deletes an author by UUID."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "text/plain" }],
+              "body": "Author deleted successfully.",
+              "_postman_previewlanguage": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "item": [
+        {
+          "name": "Get All Books",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "books"]
+            },
+            "description": "Returns all books with their publishers, authors and reviews."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "[\n  {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"title\": \"Clean Code\",\n    \"publisher\": {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n      \"name\": \"Prentice Hall\"\n    },\n    \"authors\": [\n      {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440002\",\n        \"name\": \"Robert C. Martin\"\n      }\n    ],\n    \"review\": {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440003\",\n      \"comment\": \"A must-read for every developer.\"\n    }\n  }\n]",
+              "_postman_previewlanguage": "json"
+            }
+          ]
+        },
+        {
+          "name": "Create Book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('bookId', json.id);",
+                  "    console.log('bookId saved:', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Clean Code\",\n  \"publisherId\": \"{{publisherId}}\",\n  \"authorIds\": [\"{{authorId}}\"],\n  \"reviewComment\": \"A must-read for every developer.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "books"]
+            },
+            "description": "Creates a new book. Requires an existing publisherId and at least one authorId.\n\nThe `bookId` is automatically saved to the collection variable after a successful response."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"title\": \"Clean Code\",\n  \"publisher\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"name\": \"Prentice Hall\"\n  },\n  \"authors\": [\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440002\",\n      \"name\": \"Robert C. Martin\"\n    }\n  ],\n  \"review\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440003\",\n    \"comment\": \"A must-read for every developer.\"\n  }\n}",
+              "_postman_previewlanguage": "json"
+            }
+          ]
+        },
+        {
+          "name": "Delete Book",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookstore/books/{{bookId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookstore", "books", "{{bookId}}"]
+            },
+            "description": "Deletes a book by UUID. Also deletes the associated review due to cascade."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "text/plain" }],
+              "body": "Book deleted successfully.",
+              "_postman_previewlanguage": "text"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
