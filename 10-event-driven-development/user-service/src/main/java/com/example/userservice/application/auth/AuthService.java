@@ -4,7 +4,7 @@ import com.example.userservice.domain.exception.InvalidCredentialsException;
 import com.example.userservice.domain.exception.UserAlreadyExistsException;
 import com.example.userservice.domain.model.User;
 import com.example.userservice.domain.port.out.UserRepositoryPort;
-import com.example.userservice.infrastructure.messaging.UserEventPublisher;
+import com.example.userservice.infrastructure.messaging.EventPublisher;
 import com.example.userservice.infrastructure.security.JwtService;
 import com.example.userservice.interfaces.dto.request.LoginRequestDTO;
 import com.example.userservice.interfaces.dto.request.RegisterRequestDTO;
@@ -20,7 +20,7 @@ public class AuthService {
 
     private final UserRepositoryPort userRepository;
     private final JwtService jwtService;
-    private final UserEventPublisher eventPublisher;
+    private final EventPublisher eventPublisher;
     private final BCryptPasswordEncoder passwordEncoder;
 
     public AuthResponseDTO register(RegisterRequestDTO request) {

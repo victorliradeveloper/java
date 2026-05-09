@@ -21,9 +21,12 @@ public class JwtService {
     @Value("${jwt.expiration-hours}")
     private int expirationHours;
 
+    @Value("${jwt.issuer}")
+    private String issuer;
+
     public String generateToken(User user) {
         return JWT.create()
-                .withIssuer("user-service")
+                .withIssuer(issuer)
                 .withSubject(user.getEmail())
                 .withClaim("userId", user.getId().toString())
                 .withClaim("name", user.getName())
@@ -35,7 +38,7 @@ public class JwtService {
         try {
             return Optional.of(
                     JWT.require(Algorithm.HMAC256(secret))
-                            .withIssuer("user-service")
+                            .withIssuer(issuer)
                             .build()
                             .verify(token)
             );

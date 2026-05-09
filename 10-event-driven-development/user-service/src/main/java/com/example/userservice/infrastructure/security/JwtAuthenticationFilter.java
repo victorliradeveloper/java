@@ -51,10 +51,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private User buildPrincipal(DecodedJWT decoded) {
+        String userId = decoded.getClaim("userId").asString();
+        String name   = decoded.getClaim("name").asString();
+        String email  = decoded.getSubject();
+
+        if (userId == null || name == null || email == null) {
+            throw new IllegalArgumentException("JWT missing required claims");
+        }
+
         return User.builder()
-                .id(UUID.fromString(decoded.getClaim("userId").asString()))
-                .name(decoded.getClaim("name").asString())
-                .email(decoded.getSubject())
+                .id(UUID.fromString(userId))
+                .name(name)
+                .email(email)
                 .build();
     }
 }

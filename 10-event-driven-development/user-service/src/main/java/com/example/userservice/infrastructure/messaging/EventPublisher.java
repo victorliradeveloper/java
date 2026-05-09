@@ -12,31 +12,31 @@ import java.time.Instant;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class UserEventPublisher {
+public class EventPublisher {
 
     private final RabbitTemplate rabbitTemplate;
 
     public void publishUserRegistered(User user) {
-        UserEventDTO event = buildUserEvent("USER_REGISTERED", user);
+        UserEventDTO event = buildUserEvent(EventType.USER_REGISTERED, user);
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.REGISTERED_KEY, event);
-        log.info("Published USER_REGISTERED for userId={}", user.getId());
+        log.info("Published {} for userId={}", EventType.USER_REGISTERED, user.getId());
     }
 
     public void publishUserLogin(User user) {
-        UserEventDTO event = buildUserEvent("USER_LOGIN", user);
+        UserEventDTO event = buildUserEvent(EventType.USER_LOGIN, user);
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.LOGIN_KEY, event);
-        log.info("Published USER_LOGIN for userId={}", user.getId());
+        log.info("Published {} for userId={}", EventType.USER_LOGIN, user.getId());
     }
 
     public void publishPasswordReset(User user) {
-        UserEventDTO event = buildUserEvent("USER_PASSWORD_RESET", user);
+        UserEventDTO event = buildUserEvent(EventType.USER_PASSWORD_RESET, user);
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.PASSWORD_KEY, event);
-        log.info("Published USER_PASSWORD_RESET for userId={}", user.getId());
+        log.info("Published {} for userId={}", EventType.USER_PASSWORD_RESET, user.getId());
     }
 
     public void publishOrderCreated(Order order, User user) {
         OrderEventDTO event = new OrderEventDTO(
-                "ORDER_CREATED",
+                EventType.ORDER_CREATED.name(),
                 Instant.now(),
                 new OrderEventDTO.Payload(
                         order.getId().toString(),
@@ -48,15 +48,18 @@ public class UserEventPublisher {
                 )
         );
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.ORDER_KEY, event);
-        log.info("Published ORDER_CREATED for orderId={}", order.getId());
+        log.info("Published {} for orderId={}", EventType.ORDER_CREATED, order.getId());
     }
 
-    private UserEventDTO buildUserEvent(String eventType, User user) {
+    private UserEventDTO buildUserEvent(EventType eventType, User user) {
+        if (user.getId() == null) {
+            throw new IllegalStateException("Cannot publish event for user without ID");
+        }
         return new UserEventDTO(
-                eventType,
+                eventType.name(),
                 Instant.now(),
                 new UserEventDTO.Payload(
-                        user.getId() != null ? user.getId().toString() : null,
+                        user.getId().toString(),
                         user.getName(),
                         user.getEmail()
                 )

@@ -3,6 +3,6 @@ package com.example.userservice.domain.exception;
 public class UserAlreadyExistsException extends RuntimeException {
 
     public UserAlreadyExistsException(String email) {
-        super("User already exists with email: " + email);
+        super("User already exists with email: %s".formatted(email));
     }
 }

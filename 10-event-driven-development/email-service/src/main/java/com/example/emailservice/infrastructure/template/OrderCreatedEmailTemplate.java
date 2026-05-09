@@ -6,9 +6,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class OrderCreatedEmailTemplate implements EmailTemplate<OrderEventDTO.Payload> {
 
+    private static final int SHORT_ID_LENGTH = 8;
+
     @Override
     public String subject(OrderEventDTO.Payload p) {
-        return "Pedido confirmado! #" + p.orderId().substring(0, 8).toUpperCase();
+        return "Pedido confirmado! #" + shortId(p.orderId());
     }
 
     @Override
@@ -27,6 +29,11 @@ public class OrderCreatedEmailTemplate implements EmailTemplate<OrderEventDTO.Pa
 
                 Atenciosamente,
                 Equipe User Service
-                """.formatted(p.name(), p.orderId().substring(0, 8).toUpperCase(), p.description(), p.amount());
+                """.formatted(p.name(), shortId(p.orderId()), p.description(), p.amount());
+    }
+
+    private String shortId(String orderId) {
+        int end = Math.min(orderId.length(), SHORT_ID_LENGTH);
+        return orderId.substring(0, end).toUpperCase();
     }
 }

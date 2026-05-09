@@ -1,7 +1,7 @@
 package com.example.userservice.interfaces.rest;
 
 import com.example.userservice.domain.model.User;
-import com.example.userservice.infrastructure.messaging.UserEventPublisher;
+import com.example.userservice.infrastructure.messaging.EventPublisher;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Users", description = "Operações de usuário")
 public class UserController {
 
-    private final UserEventPublisher eventPublisher;
+    private final EventPublisher eventPublisher;
 
     @PostMapping("/password-reset")
     @ResponseStatus(HttpStatus.ACCEPTED)

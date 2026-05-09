@@ -1,10 +1,14 @@
 package com.example.emailservice.infrastructure.template;
 
 import com.example.emailservice.interfaces.dto.UserEventDTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PasswordResetEmailTemplate implements EmailTemplate<UserEventDTO.Payload> {
+
+    @Value("${password-reset.url}")
+    private String resetUrl;
 
     @Override
     public String subject(UserEventDTO.Payload p) {
@@ -19,7 +23,7 @@ public class PasswordResetEmailTemplate implements EmailTemplate<UserEventDTO.Pa
                 Recebemos uma solicitação para redefinir a senha da conta: %s
 
                 Clique no link abaixo para criar uma nova senha:
-                https://userservice.com/reset-password?token=SIMULADO
+                %s
 
                 Este link expira em 1 hora.
 
@@ -27,6 +31,6 @@ public class PasswordResetEmailTemplate implements EmailTemplate<UserEventDTO.Pa
 
                 Atenciosamente,
                 Equipe User Service
-                """.formatted(p.name(), p.email());
+                """.formatted(p.name(), p.email(), resetUrl);
     }
 }
