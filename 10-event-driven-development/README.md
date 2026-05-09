@@ -17,6 +17,22 @@ Compra             →   order.created      →   "Pedido confirmado"
 Reset de senha     →   user.password      →   "Redefinir sua senha"
 ```
 
+Ambos os serviços seguem **Arquitetura Hexagonal** (Ports & Adapters).
+
+---
+
+## Tecnologias
+
+| Tecnologia | Uso |
+|---|---|
+| Java 21 + Spring Boot 3 | Base dos microserviços |
+| Spring Security + JWT | Autenticação stateless |
+| RabbitMQ (Topic Exchange) | Mensageria entre serviços |
+| PostgreSQL + Flyway | Persistência e migrations |
+| JavaMailSender + Mailtrap | Envio de emails em sandbox |
+| Docker Compose | Orquestração local |
+| Springdoc OpenAPI | Documentação Swagger |
+
 ---
 
 ## Pré-requisitos
@@ -27,7 +43,7 @@ Reset de senha     →   user.password      →   "Redefinir sua senha"
 
 ---
 
-## Como rodar com Docker
+## Como rodar
 
 ### 1. Clone o repositório e entre na pasta
 
@@ -89,7 +105,7 @@ POST /api/v1/auth/register
 }
 ```
 
-A resposta vai retornar um `token`. Guarde-o para as próximas chamadas.
+A resposta retorna um `token`. Guarde-o para as próximas chamadas.
 
 ### Login (dispara email de novo acesso)
 
@@ -141,12 +157,14 @@ Acesse o painel em `http://localhost:15672` (guest / guest).
 
 Em **Queues** você vê as filas:
 
-| Fila | Evento |
-|---|---|
-| `email.registered.queue` | Cadastro de usuário |
-| `email.login.queue` | Login de usuário |
-| `email.order.queue` | Criação de pedido |
-| `email.password.queue` | Reset de senha |
+| Fila | Routing Key | Evento |
+|---|---|---|
+| `email.registered.queue` | `user.registered` | Cadastro de usuário |
+| `email.login.queue` | `user.login` | Login de usuário |
+| `email.order.queue` | `order.created` | Criação de pedido |
+| `email.password.queue` | `user.password` | Reset de senha |
+
+Todas as mensagens passam pelo exchange `user.exchange` (Topic Exchange).
 
 ---
 
@@ -156,20 +174,69 @@ Em **Queues** você vê as filas:
 10-event-driven-development/
 ├── docker-compose.yml
 ├── user-service/          # Publica eventos no RabbitMQ (porta 8080)
-│   ├── Dockerfile
-│   └── src/
 └── email-service/         # Consome eventos e envia emails (porta 8081)
-    ├── Dockerfile
-    └── src/
 ```
 
-### user-service
+### user-service — Arquitetura Hexagonal
 
-- **POST** `/api/v1/auth/register` — cadastra usuário e publica `user.registered`
-- **POST** `/api/v1/auth/login` — autentica e publica `user.login`
-- **POST** `/api/v1/orders` — cria pedido e publica `order.created` *(requer JWT)*
-- **POST** `/api/v1/users/password-reset` — publica `user.password` *(requer JWT)*
+```
+domain/
+├── EventType.java                  # Enum com os tipos de evento do domínio
+├── model/                          # User, Order
+├── exception/                      # Exceções de domínio
+└── port/
+    ├── in/                         # Interfaces de entrada (casos de uso)
+    │   ├── AuthUseCase.java
+    │   └── OrderUseCase.java
+    └── out/                        # Interfaces de saída (repositórios)
+        ├── UserRepositoryPort.java
+        └── OrderRepositoryPort.java
 
-### email-service
+application/
+├── auth/  AuthService              # Implementa AuthUseCase
+└── order/ OrderService             # Implementa OrderUseCase
 
-Consome as filas do RabbitMQ e envia o email correspondente via Mailtrap.
+interfaces/
+├── rest/                           # Controllers injetam as interfaces port/in
+│   ├── AuthController.java
+│   ├── OrderController.java
+│   └── UserController.java
+├── dto/                            # Request e Response DTOs
+├── mapper/                         # Conversão entre DTOs e entidades
+└── exception/                      # GlobalExceptionHandler
+
+infrastructure/
+├── messaging/                      # RabbitMQ: config, publisher, DTOs de evento
+├── persistence/                    # Adapters + repositórios JPA
+├── security/                       # JWT, filtro, configuração Spring Security
+└── config/                         # OpenAPI
+```
+
+**Endpoints:**
+
+| Método | Rota | Auth | Evento publicado |
+|---|---|---|---|
+| POST | `/api/v1/auth/register` | — | `user.registered` |
+| POST | `/api/v1/auth/login` | — | `user.login` |
+| POST | `/api/v1/orders` | JWT | `order.created` |
+| POST | `/api/v1/users/password-reset` | JWT | `user.password` |
+
+---
+
+### email-service — Arquitetura Hexagonal
+
+```
+application/
+└── email/ EmailService             # Orquestra envio de emails
+
+infrastructure/
+├── messaging/                      # RabbitMQ: consumer, config e DTOs de evento
+└── template/                       # Um template por tipo de email
+    ├── EmailTemplate.java          # Interface genérica EmailTemplate<T>
+    ├── UserRegisteredEmailTemplate.java
+    ├── UserLoginEmailTemplate.java
+    ├── OrderCreatedEmailTemplate.java
+    └── PasswordResetEmailTemplate.java
+```
+
+O `EmailConsumer` escuta cada fila e delega ao `EmailService`, que usa o template correspondente para montar subject e body antes de enviar via JavaMailSender.
