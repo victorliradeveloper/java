@@ -1,0 +1,29 @@
+# Variáveis de ambiente
+.env
+
+# Certificados mTLS (gerados localmente)
+**/certs/*.key
+**/certs/*.crt
+**/certs/*.csr
+**/certs/*.p12
+**/certs/*.srl
+
+# Maven
+**/target/
+**/.mvn/
+**/mvnw
+**/mvnw.cmd
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.class
+
+# Axway license (nunca commitar)
+axway/license/*.lic
+axway/license/*.xml
+
+# OS
+.DS_Store
+Thumbs.db

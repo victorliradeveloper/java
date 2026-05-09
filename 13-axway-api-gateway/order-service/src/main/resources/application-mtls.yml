@@ -1,0 +1,9 @@
+# Perfil mTLS para order-service — habilita o cliente mTLS ao chamar payment-service
+
+payment-service:
+  url: ${PAYMENT_SERVICE_URL:https://payment-service:8443}
+  ssl:
+    key-store: ${SSL_CLIENT_KEY_STORE:classpath:certs/order-client-keystore.p12}
+    key-store-password: ${SSL_CLIENT_KEY_STORE_PASSWORD:changeit}
+    trust-store: ${SSL_CLIENT_TRUST_STORE:classpath:certs/order-truststore.p12}
+    trust-store-password: ${SSL_CLIENT_TRUST_STORE_PASSWORD:changeit}
