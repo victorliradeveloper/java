@@ -1,6 +1,9 @@
 package com.example.emailservice.application.email;
 
-import com.example.emailservice.infrastructure.template.EmailTemplateFactory;
+import com.example.emailservice.infrastructure.template.OrderCreatedEmailTemplate;
+import com.example.emailservice.infrastructure.template.PasswordResetEmailTemplate;
+import com.example.emailservice.infrastructure.template.UserLoginEmailTemplate;
+import com.example.emailservice.infrastructure.template.UserRegisteredEmailTemplate;
 import com.example.emailservice.interfaces.dto.OrderEventDTO;
 import com.example.emailservice.interfaces.dto.UserEventDTO;
 import lombok.RequiredArgsConstructor;
@@ -16,33 +19,28 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final EmailTemplateFactory templateFactory;
+    private final UserRegisteredEmailTemplate registeredTemplate;
+    private final UserLoginEmailTemplate loginTemplate;
+    private final OrderCreatedEmailTemplate orderTemplate;
+    private final PasswordResetEmailTemplate passwordTemplate;
 
     @Value("${mail.from}")
     private String from;
 
     public void sendUserRegistered(UserEventDTO.Payload payload) {
-        send(payload.email(),
-                templateFactory.registeredSubject(payload),
-                templateFactory.registeredBody(payload));
+        send(payload.email(), registeredTemplate.subject(payload), registeredTemplate.body(payload));
     }
 
     public void sendUserLogin(UserEventDTO.Payload payload) {
-        send(payload.email(),
-                templateFactory.loginSubject(payload),
-                templateFactory.loginBody(payload));
+        send(payload.email(), loginTemplate.subject(payload), loginTemplate.body(payload));
     }
 
     public void sendOrderCreated(OrderEventDTO.Payload payload) {
-        send(payload.email(),
-                templateFactory.orderSubject(payload),
-                templateFactory.orderBody(payload));
+        send(payload.email(), orderTemplate.subject(payload), orderTemplate.body(payload));
     }
 
     public void sendPasswordReset(UserEventDTO.Payload payload) {
-        send(payload.email(),
-                templateFactory.passwordSubject(payload),
-                templateFactory.passwordBody(payload));
+        send(payload.email(), passwordTemplate.subject(payload), passwordTemplate.body(payload));
     }
 
     private void send(String to, String subject, String body) {
