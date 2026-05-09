@@ -140,3 +140,10 @@ O `notification-service` escuta as três filas e por enquanto apenas loga os eve
 | `todo-service/.../config/RabbitMQConfig.java` | Configura exchange, filas, bindings e RabbitTemplate |
 | `notification-service/.../listener/TodoEventListener.java` | Consome os eventos |
 | `notification-service/.../config/RabbitMQConfig.java` | Espelha a configuração de filas no lado do consumidor |
+
+---
+
+## Leitura Complementar
+
+- [Como os Serviços se Comunicam](./communication.md) — visão geral da arquitetura e dos dois tipos de comunicação
+- [Como o RabbitMQ Listener Funciona](./rabbitmq-listener.md) — como o notification-service define o que escutar

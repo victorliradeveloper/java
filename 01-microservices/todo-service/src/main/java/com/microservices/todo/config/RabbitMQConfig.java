@@ -14,6 +14,7 @@ public class RabbitMQConfig {
     public static final String QUEUE_CREATED  = "todo.created.queue";
     public static final String QUEUE_UPDATED  = "todo.updated.queue";
     public static final String QUEUE_DELETED  = "todo.deleted.queue";
+
     public static final String ROUTING_CREATED = "todo.created";
     public static final String ROUTING_UPDATED  = "todo.updated";
     public static final String ROUTING_DELETED  = "todo.deleted";

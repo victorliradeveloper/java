@@ -99,3 +99,9 @@ O header `X-Forwarded-For` é necessário porque dentro do Docker todos os clien
 | `api-gateway/src/main/java/.../config/RateLimiterConfig.java` | Define como o IP do cliente é extraído (`KeyResolver`) |
 | `api-gateway/src/main/resources/application.yml` | Configura os parâmetros do rate limiter na rota |
 | `docker-compose.yml` | Sobe o container Redis e passa o host para o gateway |
+
+---
+
+## Leitura Complementar
+
+- [Como os Serviços se Comunicam](./communication.md) — visão geral da arquitetura e do papel do API Gateway

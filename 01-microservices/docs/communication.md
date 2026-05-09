@@ -157,3 +157,11 @@ Todas as filas usam o mesmo **exchange** chamado `todo.exchange` (do tipo _topic
 6. Notification     consome o evento da fila (de forma independente e assíncrona)
             Service loga: "[NOTIFICATION] Todo CRIADO: Estudar Java"
 ```
+
+---
+
+## Leitura Complementar
+
+- [Eventos do Sistema (RabbitMQ)](./events.md) — payload, routing keys e filas de cada evento
+- [Como o RabbitMQ Listener Funciona](./rabbitmq-listener.md) — como o notification-service define o que escutar
+- [Rate Limiting com Redis](./rate-limiting.md) — como o API Gateway limita requisições por cliente
