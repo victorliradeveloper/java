@@ -1,4 +1,4 @@
-package com.example.emailservice.interfaces.dto;
+package com.example.emailservice.infrastructure.messaging;
 
 import java.time.Instant;
 

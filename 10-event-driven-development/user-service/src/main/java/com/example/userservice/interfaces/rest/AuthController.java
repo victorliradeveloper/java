@@ -1,6 +1,6 @@
 package com.example.userservice.interfaces.rest;
 
-import com.example.userservice.application.auth.AuthService;
+import com.example.userservice.domain.port.in.AuthUseCase;
 import com.example.userservice.interfaces.dto.request.LoginRequestDTO;
 import com.example.userservice.interfaces.dto.request.RegisterRequestDTO;
 import com.example.userservice.interfaces.dto.response.AuthResponseDTO;
@@ -17,18 +17,18 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Auth", description = "Registro e autenticação de usuários")
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthUseCase authUseCase;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Registrar novo usuário")
     public AuthResponseDTO register(@Valid @RequestBody RegisterRequestDTO request) {
-        return authService.register(request);
+        return authUseCase.register(request);
     }
 
     @PostMapping("/login")
     @Operation(summary = "Autenticar usuário e obter JWT")
     public AuthResponseDTO login(@Valid @RequestBody LoginRequestDTO request) {
-        return authService.login(request);
+        return authUseCase.login(request);
     }
 }

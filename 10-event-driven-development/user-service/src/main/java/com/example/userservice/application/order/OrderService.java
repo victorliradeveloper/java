@@ -2,6 +2,7 @@ package com.example.userservice.application.order;
 
 import com.example.userservice.domain.model.Order;
 import com.example.userservice.domain.model.User;
+import com.example.userservice.domain.port.in.OrderUseCase;
 import com.example.userservice.domain.port.out.OrderRepositoryPort;
 import com.example.userservice.infrastructure.messaging.EventPublisher;
 import com.example.userservice.interfaces.dto.request.OrderRequestDTO;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OrderService {
+public class OrderService implements OrderUseCase {
 
     private final OrderRepositoryPort orderRepository;
     private final EventPublisher eventPublisher;

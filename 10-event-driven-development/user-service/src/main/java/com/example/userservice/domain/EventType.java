@@ -1,4 +1,4 @@
-package com.example.userservice.infrastructure.messaging;
+package com.example.userservice.domain;
 
 public enum EventType {
     USER_REGISTERED,

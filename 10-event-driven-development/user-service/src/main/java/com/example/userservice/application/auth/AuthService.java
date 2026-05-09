@@ -3,6 +3,7 @@ package com.example.userservice.application.auth;
 import com.example.userservice.domain.exception.InvalidCredentialsException;
 import com.example.userservice.domain.exception.UserAlreadyExistsException;
 import com.example.userservice.domain.model.User;
+import com.example.userservice.domain.port.in.AuthUseCase;
 import com.example.userservice.domain.port.out.UserRepositoryPort;
 import com.example.userservice.infrastructure.messaging.EventPublisher;
 import com.example.userservice.infrastructure.security.JwtService;
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class AuthService implements AuthUseCase {
 
     private final UserRepositoryPort userRepository;
     private final JwtService jwtService;

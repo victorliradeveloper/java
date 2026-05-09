@@ -4,8 +4,8 @@ import com.example.emailservice.infrastructure.template.OrderCreatedEmailTemplat
 import com.example.emailservice.infrastructure.template.PasswordResetEmailTemplate;
 import com.example.emailservice.infrastructure.template.UserLoginEmailTemplate;
 import com.example.emailservice.infrastructure.template.UserRegisteredEmailTemplate;
-import com.example.emailservice.interfaces.dto.OrderEventDTO;
-import com.example.emailservice.interfaces.dto.UserEventDTO;
+import com.example.emailservice.infrastructure.messaging.OrderEventDTO;
+import com.example.emailservice.infrastructure.messaging.UserEventDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

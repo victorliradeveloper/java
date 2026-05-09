@@ -1,5 +1,6 @@
 package com.example.userservice.infrastructure.messaging;
 
+import com.example.userservice.domain.EventType;
 import com.example.userservice.domain.model.Order;
 import com.example.userservice.domain.model.User;
 import lombok.RequiredArgsConstructor;

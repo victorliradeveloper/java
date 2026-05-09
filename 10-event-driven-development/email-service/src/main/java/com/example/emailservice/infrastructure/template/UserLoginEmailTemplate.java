@@ -1,6 +1,6 @@
 package com.example.emailservice.infrastructure.template;
 
-import com.example.emailservice.interfaces.dto.UserEventDTO;
+import com.example.emailservice.infrastructure.messaging.UserEventDTO;
 import org.springframework.stereotype.Component;
 
 @Component

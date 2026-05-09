@@ -1,8 +1,6 @@
 package com.example.emailservice.infrastructure.messaging;
 
 import com.example.emailservice.application.email.EmailService;
-import com.example.emailservice.interfaces.dto.OrderEventDTO;
-import com.example.emailservice.interfaces.dto.UserEventDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
