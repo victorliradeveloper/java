@@ -4,11 +4,15 @@ import com.ecommerce.user.domain.exception.UserProfileAlreadyExistsException;
 import com.ecommerce.user.domain.exception.UserProfileNotFoundException;
 import com.ecommerce.user.domain.model.Address;
 import com.ecommerce.user.domain.model.UserProfile;
+import com.ecommerce.user.domain.model.event.AddressAddedEvent;
+import com.ecommerce.user.domain.model.event.UserProfileCreatedEvent;
+import com.ecommerce.user.domain.model.event.UserProfileUpdatedEvent;
 import com.ecommerce.user.domain.port.in.FindUserProfileUseCase;
 import com.ecommerce.user.domain.port.in.ManageUserProfileUseCase;
 import com.ecommerce.user.domain.port.in.command.AddAddressCommand;
 import com.ecommerce.user.domain.port.in.command.CreateProfileCommand;
 import com.ecommerce.user.domain.port.in.command.UpdateProfileCommand;
+import com.ecommerce.user.domain.port.out.UserEventPublisher;
 import com.ecommerce.user.domain.port.out.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserProfileService implements FindUserProfileUseCase, ManageUserProfileUseCase {
 
     private final UserProfileRepository userProfileRepository;
+    private final UserEventPublisher userEventPublisher;
 
     @Override
     public UserProfile findByUserId(Long userId) {
@@ -38,7 +43,9 @@ public class UserProfileService implements FindUserProfileUseCase, ManageUserPro
                 command.email(),
                 command.phone()
         );
-        return userProfileRepository.save(profile);
+        var saved = userProfileRepository.save(profile);
+        userEventPublisher.publishProfileCreated(UserProfileCreatedEvent.from(saved));
+        return saved;
     }
 
     @Override
@@ -47,7 +54,9 @@ public class UserProfileService implements FindUserProfileUseCase, ManageUserPro
         var profile = userProfileRepository.findByUserId(command.userId())
                 .orElseThrow(() -> new UserProfileNotFoundException(command.userId()));
         profile.update(command.name(), command.email(), command.phone());
-        return userProfileRepository.save(profile);
+        var saved = userProfileRepository.save(profile);
+        userEventPublisher.publishProfileUpdated(UserProfileUpdatedEvent.from(saved));
+        return saved;
     }
 
     @Override
@@ -66,6 +75,16 @@ public class UserProfileService implements FindUserProfileUseCase, ManageUserPro
                 .build();
 
         profile.addAddress(address);
-        return userProfileRepository.save(profile);
+        var saved = userProfileRepository.save(profile);
+
+        var addedAddress = saved.getAddresses().stream()
+                .filter(a -> a.getStreet().equals(address.getStreet())
+                        && a.getCity().equals(address.getCity())
+                        && a.getZipCode().equals(address.getZipCode()))
+                .reduce((first, second) -> second)
+                .orElse(address);
+
+        userEventPublisher.publishAddressAdded(AddressAddedEvent.of(saved, addedAddress));
+        return saved;
     }
 }

@@ -44,6 +44,9 @@ rabbitmq:
   payment-failed:
     queue: payment.failed.queue
     routing-key: payment.failed
+  user-profile-created:
+    queue: user.profile.created.queue
+    routing-key: user.profile.created
 
 notification:
   from-email: noreply@ecommerce.com

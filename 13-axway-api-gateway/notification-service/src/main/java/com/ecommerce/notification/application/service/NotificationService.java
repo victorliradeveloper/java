@@ -3,8 +3,10 @@ package com.ecommerce.notification.application.service;
 import com.ecommerce.notification.domain.model.Notification;
 import com.ecommerce.notification.domain.model.NotificationType;
 import com.ecommerce.notification.domain.model.event.PaymentResultEvent;
+import com.ecommerce.notification.domain.model.event.UserProfileCreatedEvent;
 import com.ecommerce.notification.domain.port.in.FindNotificationsUseCase;
 import com.ecommerce.notification.domain.port.in.ProcessPaymentResultUseCase;
+import com.ecommerce.notification.domain.port.in.SendWelcomeEmailUseCase;
 import com.ecommerce.notification.domain.port.out.EmailSender;
 import com.ecommerce.notification.domain.port.out.NotificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,10 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class NotificationService implements ProcessPaymentResultUseCase, FindNotificationsUseCase {
+public class NotificationService implements
+        ProcessPaymentResultUseCase,
+        SendWelcomeEmailUseCase,
+        FindNotificationsUseCase {
 
     private final NotificationRepository notificationRepository;
     private final EmailSender emailSender;
@@ -27,7 +32,7 @@ public class NotificationService implements ProcessPaymentResultUseCase, FindNot
     public void onPaymentSuccess(PaymentResultEvent event) {
         var subject = "Pagamento confirmado - Pedido #" + event.orderId();
         var body = buildPaymentSuccessMessage(event);
-        deliver(event, NotificationType.PAYMENT_SUCCESS, subject, body);
+        deliverPayment(event, NotificationType.PAYMENT_SUCCESS, subject, body);
     }
 
     @Override
@@ -35,7 +40,15 @@ public class NotificationService implements ProcessPaymentResultUseCase, FindNot
     public void onPaymentFailed(PaymentResultEvent event) {
         var subject = "Falha no pagamento - Pedido #" + event.orderId();
         var body = buildPaymentFailedMessage(event);
-        deliver(event, NotificationType.PAYMENT_FAILED, subject, body);
+        deliverPayment(event, NotificationType.PAYMENT_FAILED, subject, body);
+    }
+
+    @Override
+    @Transactional
+    public void onProfileCreated(UserProfileCreatedEvent event) {
+        var subject = "Bem-vindo(a) à E-commerce!";
+        var body = buildWelcomeMessage(event);
+        deliver(event.userId(), null, NotificationType.WELCOME, event.email(), subject, body);
     }
 
     @Override
@@ -43,9 +56,12 @@ public class NotificationService implements ProcessPaymentResultUseCase, FindNot
         return notificationRepository.findByUserId(userId);
     }
 
-    private void deliver(PaymentResultEvent event, NotificationType type, String subject, String body) {
-        var recipient = resolveEmail(event.userId());
-        var notification = Notification.newPending(event.userId(), event.orderId(), type, recipient, subject, body);
+    private void deliverPayment(PaymentResultEvent event, NotificationType type, String subject, String body) {
+        deliver(event.userId(), event.orderId(), type, resolveEmail(event.userId()), subject, body);
+    }
+
+    private void deliver(Long userId, Long orderId, NotificationType type, String recipient, String subject, String body) {
+        var notification = Notification.newPending(userId, orderId, type, recipient, subject, body);
         var saved = notificationRepository.save(notification);
 
         try {
@@ -93,5 +109,19 @@ public class NotificationService implements ProcessPaymentResultUseCase, FindNot
                 Equipe E-commerce
                 """.formatted(event.orderId(), event.currency(), event.amount(),
                 event.failureReason() != null ? event.failureReason() : "Não especificado");
+    }
+
+    private String buildWelcomeMessage(UserProfileCreatedEvent event) {
+        return """
+                Olá, %s!
+
+                Seja muito bem-vindo(a) à E-commerce. Seu cadastro foi concluído com sucesso.
+
+                Você já pode explorar nosso catálogo e fazer seu primeiro pedido.
+
+                Qualquer dúvida, conte com a gente.
+
+                Equipe E-commerce
+                """.formatted(event.name());
     }
 }

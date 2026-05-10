@@ -190,6 +190,47 @@ O Axway API Gateway é uma solução enterprise. Para uso em estudos, solicite u
 
 ---
 
+## Credenciais e portas (ambiente local)
+
+> Valores de desenvolvimento, definidos no `docker-compose.yml`. **Não usar em produção.**
+
+### Oracle Database — `localhost:1521`
+
+| Acesso | Usuário | Senha | Service Name | Role |
+|---|---|---|---|---|
+| Aplicação (schema do projeto) | `ecommerce` | `ecommerce123` | `FREEPDB1` | Normal |
+| Admin / DBA | `sys` | `oracle123` | `FREE` | **SYSDBA** |
+
+JDBC URL: `jdbc:oracle:thin:@localhost:1521/FREEPDB1`
+
+### RabbitMQ — `localhost:5672` (UI: [localhost:15672](http://localhost:15672))
+
+| Usuário | Senha |
+|---|---|
+| `ecommerce` | `ecommerce123` |
+
+### Outros serviços
+
+| Serviço | URL | Credenciais |
+|---|---|---|
+| Grafana | [localhost:3000](http://localhost:3000) | `admin` / `admin` |
+| MailHog (UI) | [localhost:8025](http://localhost:8025) | — |
+| MailHog (SMTP) | `localhost:1025` | — |
+| Prometheus | [localhost:9090](http://localhost:9090) | — |
+
+### Portas dos microsserviços
+
+| Serviço | Porta |
+|---|---|
+| auth-service | 8081 |
+| product-service | 8082 |
+| user-service | 8083 |
+| order-service | 8084 |
+| payment-service | 8085 |
+| notification-service | 8086 |
+
+---
+
 ## APIs principais
 
 | Método | Endpoint | Serviço | Segurança |

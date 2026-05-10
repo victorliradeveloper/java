@@ -1,6 +1,7 @@
 package com.ecommerce.notification.domain.model;
 
 public enum NotificationType {
+    WELCOME,
     PAYMENT_SUCCESS,
     PAYMENT_FAILED,
     ORDER_CONFIRMED,

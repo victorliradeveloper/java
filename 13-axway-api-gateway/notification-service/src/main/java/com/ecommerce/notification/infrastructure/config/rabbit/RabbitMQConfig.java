@@ -31,6 +31,12 @@ public class RabbitMQConfig {
     @Value("${rabbitmq.payment-failed.routing-key}")
     private String paymentFailedRoutingKey;
 
+    @Value("${rabbitmq.user-profile-created.queue}")
+    private String userProfileCreatedQueue;
+
+    @Value("${rabbitmq.user-profile-created.routing-key}")
+    private String userProfileCreatedRoutingKey;
+
     @Bean
     public TopicExchange ecommerceExchange() {
         return new TopicExchange(exchange);
@@ -47,6 +53,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue userProfileCreatedQueue() {
+        return QueueBuilder.durable(userProfileCreatedQueue).build();
+    }
+
+    @Bean
     public Binding paymentProcessedBinding() {
         return BindingBuilder.bind(paymentProcessedQueue()).to(ecommerceExchange()).with(paymentProcessedRoutingKey);
     }
@@ -54,6 +65,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding paymentFailedBinding() {
         return BindingBuilder.bind(paymentFailedQueue()).to(ecommerceExchange()).with(paymentFailedRoutingKey);
+    }
+
+    @Bean
+    public Binding userProfileCreatedBinding() {
+        return BindingBuilder.bind(userProfileCreatedQueue()).to(ecommerceExchange()).with(userProfileCreatedRoutingKey);
     }
 
     @Bean
