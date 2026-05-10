@@ -1,0 +1,293 @@
+{
+  "info": {
+    "name": "Axway E-commerce Microservices",
+    "_postman_id": "axway-ecommerce-collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection completa dos microsserviços do projeto Axway API Gateway.\n\nFluxo recomendado:\n1. Auth → Register\n2. Auth → Login  (token salvo automaticamente)\n3. Demais endpoints usando {{accessToken}}"
+  },
+  "variable": [
+    { "key": "authUrl",         "value": "http://localhost:8081" },
+    { "key": "userUrl",         "value": "http://localhost:8083" },
+    { "key": "productUrl",      "value": "http://localhost:8082" },
+    { "key": "orderUrl",        "value": "http://localhost:8084" },
+    { "key": "paymentUrl",      "value": "http://localhost:8085" },
+    { "key": "notificationUrl", "value": "http://localhost:8086" },
+    { "key": "accessToken",     "value": "" },
+    { "key": "refreshToken",    "value": "" }
+  ],
+  "item": [
+
+    {
+      "name": "Auth Service",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{authUrl}}/auth/register", "host": ["{{authUrl}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Victor Lira\",\n  \"email\": \"victor@ecommerce.com\",\n  \"password\": \"senha123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "console.log('Token salvo:', json.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{authUrl}}/auth/login", "host": ["{{authUrl}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"victor@ecommerce.com\",\n  \"password\": \"senha123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', json.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Refresh-Token", "value": "{{refreshToken}}" }],
+            "url": { "raw": "{{authUrl}}/auth/refresh", "host": ["{{authUrl}}"], "path": ["auth", "refresh"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "User Service",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{userUrl}}/users/me", "host": ["{{userUrl}}"], "path": ["users", "me"] }
+          }
+        },
+        {
+          "name": "Create Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{userUrl}}/users/me", "host": ["{{userUrl}}"], "path": ["users", "me"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Victor Lira\",\n  \"email\": \"victor@ecommerce.com\",\n  \"phone\": \"+5511999999999\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{userUrl}}/users/me", "host": ["{{userUrl}}"], "path": ["users", "me"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Victor Lira\",\n  \"email\": \"victor@ecommerce.com\",\n  \"phone\": \"+5511988888888\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{userUrl}}/users/me/addresses", "host": ["{{userUrl}}"], "path": ["users", "me", "addresses"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"street\": \"Rua das Flores, 123\",\n  \"city\": \"São Paulo\",\n  \"state\": \"SP\",\n  \"zipCode\": \"01310-100\",\n  \"country\": \"Brasil\",\n  \"main\": true\n}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Product Service",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{productUrl}}/products",
+              "host": ["{{productUrl}}"],
+              "path": ["products"],
+              "query": [{ "key": "category", "value": "", "disabled": true }]
+            }
+          }
+        },
+        {
+          "name": "List Products by Category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{productUrl}}/products?category=ELECTRONICS",
+              "host": ["{{productUrl}}"],
+              "path": ["products"],
+              "query": [{ "key": "category", "value": "ELECTRONICS" }]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{productUrl}}/products/1", "host": ["{{productUrl}}"], "path": ["products", "1"] }
+          }
+        },
+        {
+          "name": "Create Product (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{productUrl}}/products", "host": ["{{productUrl}}"], "path": ["products"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Notebook Dell XPS\",\n  \"description\": \"Notebook premium com Intel Core i7\",\n  \"price\": 7999.99,\n  \"stock\": 10,\n  \"category\": \"ELECTRONICS\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Product (ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{productUrl}}/products/1", "host": ["{{productUrl}}"], "path": ["products", "1"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Notebook Dell XPS\",\n  \"description\": \"Notebook premium com Intel Core i7 - Atualizado\",\n  \"price\": 7499.99,\n  \"stock\": 8,\n  \"category\": \"ELECTRONICS\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Product (ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{productUrl}}/products/1", "host": ["{{productUrl}}"], "path": ["products", "1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Order Service",
+      "item": [
+        {
+          "name": "List My Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{orderUrl}}/orders", "host": ["{{orderUrl}}"], "path": ["orders"] }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{orderUrl}}/orders/1", "host": ["{{orderUrl}}"], "path": ["orders", "1"] }
+          }
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{orderUrl}}/orders", "host": ["{{orderUrl}}"], "path": ["orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"productName\": \"Notebook Dell XPS\",\n      \"quantity\": 1,\n      \"price\": 7999.99\n    }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Payment Service",
+      "item": [
+        {
+          "name": "List All Payments (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{paymentUrl}}/payments", "host": ["{{paymentUrl}}"], "path": ["payments"] }
+          }
+        },
+        {
+          "name": "Get Payment by Order ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{paymentUrl}}/payments/order/1", "host": ["{{paymentUrl}}"], "path": ["payments", "order", "1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Notification Service",
+      "item": [
+        {
+          "name": "List My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{notificationUrl}}/notifications", "host": ["{{notificationUrl}}"], "path": ["notifications"] }
+          }
+        }
+      ]
+    }
+
+  ]
+}

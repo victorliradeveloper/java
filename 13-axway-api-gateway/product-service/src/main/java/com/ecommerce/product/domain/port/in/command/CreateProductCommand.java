@@ -1,0 +1,11 @@
+package com.ecommerce.product.domain.port.in.command;
+
+import java.math.BigDecimal;
+
+public record CreateProductCommand(
+        String name,
+        String description,
+        BigDecimal price,
+        Integer stock,
+        String category
+) {}
