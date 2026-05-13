@@ -6,6 +6,7 @@ import com.javanauta.todo_app.domain.model.Todo;
 import com.javanauta.todo_app.domain.model.TodoPage;
 import com.javanauta.todo_app.domain.model.User;
 import com.javanauta.todo_app.domain.port.in.TodoUseCase;
+import com.javanauta.todo_app.infrastructure.security.JwtService;
 import com.javanauta.todo_app.interfaces.dto.request.TodoRequestDTO;
 import com.javanauta.todo_app.interfaces.dto.response.CursorPageResponseDTO;
 import com.javanauta.todo_app.interfaces.dto.response.PagedResponseDTO;
@@ -18,10 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,11 +49,17 @@ class TodoControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private TodoUseCase todoUseCase;
 
-    @MockBean
+    @MockitoBean
     private TodoMapper todoMapper;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private StringRedisTemplate stringRedisTemplate;
 
     private TodoResponseDTO response;
     private TodoRequestDTO request;
