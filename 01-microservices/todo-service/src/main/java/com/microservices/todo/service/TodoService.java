@@ -7,6 +7,7 @@ import com.microservices.todo.dto.response.TodoResponseDTO;
 import com.microservices.todo.event.TodoEvent;
 import com.microservices.todo.infrastructure.entity.Todo;
 import com.microservices.todo.infrastructure.repository.TodoRepository;
+import com.microservices.todo.mapper.TodoMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -20,34 +21,29 @@ public class TodoService {
 
     private final TodoRepository repository;
     private final RabbitTemplate rabbitTemplate;
+    private final TodoMapper mapper;
 
     public TodoResponseDTO create(TodoRequestDTO dto) {
-        Todo todo = Todo.builder()
-                .title(dto.title())
-                .description(dto.description())
-                .completed(false)
-                .build();
-        TodoResponseDTO response = toResponse(repository.save(todo));
+        Todo todo = repository.save(mapper.toEntity(dto));
+        TodoResponseDTO response = mapper.toResponse(todo);
         publish(RabbitMQConfig.ROUTING_CREATED, TodoEvent.of(response.id(), response.title(), "CREATED"));
         return response;
     }
 
     public List<TodoResponseDTO> findAll() {
         return repository.findAll().stream()
-                .map(this::toResponse)
+                .map(mapper::toResponse)
                 .toList();
     }
 
     public TodoResponseDTO findById(String id) {
-        return toResponse(getOrThrow(id));
+        return mapper.toResponse(getOrThrow(id));
     }
 
     public TodoResponseDTO update(String id, TodoUpdateDTO dto) {
         Todo todo = getOrThrow(id);
-        if (dto.title() != null) todo.setTitle(dto.title());
-        if (dto.description() != null) todo.setDescription(dto.description());
-        if (dto.completed() != null) todo.setCompleted(dto.completed());
-        TodoResponseDTO response = toResponse(repository.save(todo));
+        mapper.updateEntity(dto, todo);
+        TodoResponseDTO response = mapper.toResponse(repository.save(todo));
         publish(RabbitMQConfig.ROUTING_UPDATED, TodoEvent.of(response.id(), response.title(), "UPDATED"));
         return response;
     }
@@ -65,15 +61,5 @@ public class TodoService {
     private Todo getOrThrow(String id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Todo not found: " + id));
-    }
-
-    private TodoResponseDTO toResponse(Todo todo) {
-        return new TodoResponseDTO(
-                todo.getId(),
-                todo.getTitle(),
-                todo.getDescription(),
-                todo.isCompleted(),
-                todo.getCreatedAt()
-        );
     }
 }
