@@ -12,6 +12,29 @@ spring:
       sqs:
         endpoint: ${SPRING_CLOUD_AWS_SQS_ENDPOINT:http://localhost:4566}
 
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    # Sem default — se a env var não vier, o startup falha rápido com
+    # mensagem clara (em vez de autenticar com string vazia e dar erro confuso).
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
+    # Gmail exige autenticação e STARTTLS na porta 587.
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+# Configuração específica do envio de e-mail desta aplicação.
+# Ambos vêm do .env via docker-compose; sem default pra forçar configuração explícita.
+notification:
+  mail:
+    from: ${NOTIFICATION_MAIL_FROM}
+    to: ${NOTIFICATION_MAIL_TO}
+
 server:
   port: 8082
 

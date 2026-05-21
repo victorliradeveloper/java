@@ -101,6 +101,14 @@ services:
       SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
       SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      # SMTP — valores vêm do .env na raiz (não commitado).
+      SPRING_MAIL_HOST: ${SMTP_HOST}
+      SPRING_MAIL_PORT: ${SMTP_PORT}
+      SPRING_MAIL_USERNAME: ${SMTP_USER}
+      SPRING_MAIL_PASSWORD: ${SMTP_PASS}
+      # From sempre é reescrito pelo Gmail para o dono da App Password.
+      NOTIFICATION_MAIL_FROM: ${SMTP_USER}
+      NOTIFICATION_MAIL_TO: ${NOTIFICATION_MAIL_TO}
     ports:
       - "8082:8082"
     depends_on:
