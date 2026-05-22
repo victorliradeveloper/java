@@ -68,8 +68,8 @@ public class TodoEventListener {
      * "duplica raro" (ver .spec/idempotency.md §1.3).
      */
     private boolean alreadyProcessed(UUID messageId, TodoEvent event) {
-        int inserted = processedMessageRepository.tryInsert(messageId.toString());
-        if (inserted == 0) {
+        boolean inserted = processedMessageRepository.tryInsert(messageId.toString());
+        if (!inserted) {
             log.info("[DEDUPE] mensagem duplicada descartada -> messageId={} | action={} | todoId={}",
                     messageId, event.action(), event.todoId());
             return true;

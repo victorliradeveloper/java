@@ -12,7 +12,7 @@ Versão derivada de `01-microservices`, com RabbitMQ substituído por SQS.
 | `api-gateway` | 8090 | Ponto de entrada da API |
 | `todo-service` | 8081 | CRUD de tarefas |
 | `notification-service` | 8082 | Consome eventos das filas SQS |
-| `postgres` | 5432 | Banco de dados |
+| `mongo` | 27017 | Banco de dados (replica set single-node) |
 | `localstack` | 4566 | Emulador AWS (SQS) |
 | `redis` | 6379 | Backend do rate limiter |
 

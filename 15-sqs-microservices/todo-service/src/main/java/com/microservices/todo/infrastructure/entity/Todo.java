@@ -1,12 +1,16 @@
 package com.microservices.todo.infrastructure.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "todos")
+@Document(collection = "todos")
 @Getter
 @Setter
 @Builder
@@ -15,22 +19,13 @@ import java.time.LocalDateTime;
 public class Todo {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false)
     private String title;
 
     private String description;
 
-    @Column(nullable = false)
     private boolean completed;
 
-    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @PrePersist
-    void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
 }

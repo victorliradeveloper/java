@@ -6,7 +6,10 @@ services:
     container_name: todo-mongo
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
-      - "27017:27017"
+      # Host:container. Host fica em 27018 pra nao conflitar com Mongo
+      # nativo do Windows (ouvindo em 127.0.0.1:27017). Dentro da rede docker,
+      # services continuam usando mongo:27017.
+      - "27018:27017"
     volumes:
       - mongo-data:/data/db
     networks:

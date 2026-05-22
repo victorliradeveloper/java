@@ -5,15 +5,17 @@ import com.microservices.todo.dto.request.TodoRequestDTO;
 import com.microservices.todo.dto.request.TodoUpdateDTO;
 import com.microservices.todo.dto.response.TodoResponseDTO;
 import com.microservices.todo.event.TodoEvent;
+import com.microservices.todo.exception.TodoNotFoundException;
 import com.microservices.todo.infrastructure.entity.Todo;
 import com.microservices.todo.infrastructure.repository.TodoRepository;
 import com.microservices.todo.mapper.TodoMapper;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +26,10 @@ public class TodoService {
     private final TodoMapper mapper;
 
     public TodoResponseDTO create(TodoRequestDTO dto) {
-        Todo todo = repository.save(mapper.toEntity(dto));
+        Todo entity = mapper.toEntity(dto);
+        entity.setId(UUID.randomUUID().toString());
+        entity.setCreatedAt(LocalDateTime.now());
+        Todo todo = repository.save(entity);
         TodoResponseDTO response = mapper.toResponse(todo);
         publish(SqsConfig.QUEUE_CREATED, TodoEvent.of(response.id(), response.title(), "CREATED"));
         return response;
@@ -66,7 +71,7 @@ public class TodoService {
 
     private Todo getOrThrow(String id) {
         return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Todo not found: " + id));
+                .orElseThrow(() -> new TodoNotFoundException(id));
     }
 
     private record TodoSnapshot(String title, String description, boolean completed) {

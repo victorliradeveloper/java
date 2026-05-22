@@ -1,19 +1,13 @@
 spring:
   application:
     name: todo-service
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/tododb}
-    username: ${SPRING_DATASOURCE_USERNAME:todo_user}
-    password: ${SPRING_DATASOURCE_PASSWORD:todo_pass}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+  data:
+    mongodb:
+      # Default usado em dev local (sem docker). Em compose, vem de
+      # SPRING_DATA_MONGODB_URI apontando pra mongo:27017.
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/tododb?replicaSet=rs0&directConnection=true}
+      # Divida: substituir por Mongock em producao (anti-pattern Mongo).
+      auto-index-creation: true
 
   cloud:
     aws:
