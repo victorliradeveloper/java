@@ -6,8 +6,6 @@ spring:
       # Default usado em dev local (sem docker). Em compose, vem de
       # SPRING_DATA_MONGODB_URI apontando pra mongo:27017.
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/tododb?replicaSet=rs0&directConnection=true}
-      # Divida: substituir por Mongock em producao (anti-pattern Mongo).
-      auto-index-creation: true
 
   cloud:
     aws:
@@ -44,3 +42,19 @@ outbox:
   # Se o worker crashar antes de marcar publishedAt, o lease expira e outro
   # worker pode pegar o evento. Mantenha > tempo maximo plausivel de publish.
   lease-duration-ms: 30000
+
+mongock:
+  # Pacote raiz onde Mongock procura @ChangeUnit. Restringe o scan
+  # para evitar varrer todo o classpath.
+  migration-scan-package: com.microservices.todo.infrastructure.migration
+  # InitializingBean roda na fase de inicializacao dos beans, antes do
+  # Tomcat aceitar trafego. ApplicationRunner (default) roda DEPOIS do
+  # "Started" log e do Tomcat aceitar requests - inaceitavel em prod, onde
+  # o cliente nao pode pegar a app antes das migrations terminarem.
+  runner-type: initializingbean
+  # Transacao desligada: MongoDB nao permite createIndexes/createCollection
+  # dentro de transacao multi-doc (erro 72 - InvalidOptions). Migracoes de
+  # dados que precisem de atomicidade devem usar @ChangeUnit(transactional=true)
+  # individualmente, e nunca misturar DDL com data nessas ChangeUnits.
+  transactional: false
+  enabled: true

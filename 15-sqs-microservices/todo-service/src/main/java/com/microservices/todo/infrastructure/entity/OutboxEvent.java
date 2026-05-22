@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -39,9 +38,9 @@ public class OutboxEvent {
     @Field("created_at")
     private LocalDateTime createdAt;
 
-    // null = pendente. Indexado pra acelerar o claim do publisher.
+    // null = pendente. Indexado em V001_BaselineIndexes (Mongock) pra acelerar
+    // o claim do publisher.
     @Field("published_at")
-    @Indexed
     private LocalDateTime publishedAt;
 
     private int attempts;

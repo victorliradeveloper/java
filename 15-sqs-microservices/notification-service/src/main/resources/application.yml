@@ -5,7 +5,6 @@ spring:
   data:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27018/notificationdb?replicaSet=rs0&directConnection=true}
-      auto-index-creation: true
 
   cloud:
     aws:
@@ -55,3 +54,16 @@ management:
     web:
       exposure:
         include: health, info
+
+mongock:
+  # Pacote raiz onde Mongock procura @ChangeUnit. Restringe o scan
+  # para evitar varrer todo o classpath.
+  migration-scan-package: com.microservices.notification.infrastructure.migration
+  # InitializingBean: roda antes do Tomcat aceitar trafego. Garante que
+  # nenhum request HTTP / listener SQS comece antes das migrations terminarem.
+  runner-type: initializingbean
+  # MongoDB nao suporta DDL (createIndexes, createCollection) dentro de
+  # transacao multi-doc. Migrations transacionais habilitam por ChangeUnit
+  # via @ChangeUnit(transactional=true) e devem ser DML pura.
+  transactional: false
+  enabled: true
