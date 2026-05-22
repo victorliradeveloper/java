@@ -42,16 +42,22 @@ public class TodoService {
 
     public TodoResponseDTO update(String id, TodoUpdateDTO dto) {
         Todo todo = getOrThrow(id);
+        TodoSnapshot before = TodoSnapshot.from(todo);
         mapper.updateEntity(dto, todo);
+        TodoSnapshot after = TodoSnapshot.from(todo);
+
         TodoResponseDTO response = mapper.toResponse(repository.save(todo));
-        publish(SqsConfig.QUEUE_UPDATED, TodoEvent.of(response.id(), response.title(), "UPDATED"));
+        if (!before.equals(after)) {
+            publish(SqsConfig.QUEUE_UPDATED, TodoEvent.of(response.id(), response.title(), "UPDATED"));
+        }
         return response;
     }
 
     public void delete(String id) {
-        Todo todo = getOrThrow(id);
-        repository.delete(todo);
-        publish(SqsConfig.QUEUE_DELETED, TodoEvent.of(todo.getId(), todo.getTitle(), "DELETED"));
+        repository.findById(id).ifPresent(todo -> {
+            repository.delete(todo);
+            publish(SqsConfig.QUEUE_DELETED, TodoEvent.of(todo.getId(), todo.getTitle(), "DELETED"));
+        });
     }
 
     private void publish(String queueName, TodoEvent event) {
@@ -61,5 +67,11 @@ public class TodoService {
     private Todo getOrThrow(String id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Todo not found: " + id));
+    }
+
+    private record TodoSnapshot(String title, String description, boolean completed) {
+        static TodoSnapshot from(Todo todo) {
+            return new TodoSnapshot(todo.getTitle(), todo.getDescription(), todo.isCompleted());
+        }
     }
 }

@@ -34,3 +34,5 @@ build/
 
 ### Local secrets ###
 .env
+
+.spec

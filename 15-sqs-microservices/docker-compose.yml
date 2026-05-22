@@ -1,24 +1,37 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: todo-postgres
-    environment:
-      POSTGRES_DB: tododb
-      POSTGRES_USER: todo_user
-      POSTGRES_PASSWORD: todo_pass
+  mongo:
+    image: mongo:7
+    container_name: todo-mongo
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
-      - "5432:5432"
+      - "27017:27017"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - mongo-data:/data/db
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U todo_user -d tododb"]
-      interval: 10s
+      # rs.status().ok = 1 só depois que o mongo-setup roda rs.initiate().
+      # Enquanto isso fica unhealthy, mas mongo-setup nao depende de healthy.
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'rs.status().ok' | grep -q 1"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 30
+      start_period: 20s
+
+  mongo-setup:
+    image: mongo:7
+    container_name: todo-mongo-setup
+    depends_on:
+      mongo:
+        condition: service_started
+    volumes:
+      - ./mongo/init-replset.sh:/init-replset.sh:ro
+    entrypoint: ["bash", "/init-replset.sh"]
+    networks:
+      - microservices-net
+    restart: "no"
 
   localstack:
     image: localstack/localstack:3
@@ -72,9 +85,7 @@ services:
     build: ./todo-service
     container_name: todo-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tododb
-      SPRING_DATASOURCE_USERNAME: todo_user
-      SPRING_DATASOURCE_PASSWORD: todo_pass
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/tododb?replicaSet=rs0
       SPRING_CLOUD_AWS_SQS_ENDPOINT: http://localstack:4566
       SPRING_CLOUD_AWS_REGION_STATIC: us-east-1
       SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
@@ -83,7 +94,7 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      postgres:
+      mongo:
         condition: service_healthy
       localstack:
         condition: service_healthy
@@ -96,6 +107,7 @@ services:
     build: ./notification-service
     container_name: notification-service
     environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/notificationdb?replicaSet=rs0
       SPRING_CLOUD_AWS_SQS_ENDPOINT: http://localstack:4566
       SPRING_CLOUD_AWS_REGION_STATIC: us-east-1
       SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
@@ -112,6 +124,8 @@ services:
     ports:
       - "8082:8082"
     depends_on:
+      mongo:
+        condition: service_healthy
       localstack:
         condition: service_healthy
       eureka-server:
@@ -140,4 +154,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres-data:
+  mongo-data:
