@@ -9,9 +9,10 @@ import com.microservices.todo.exception.TodoNotFoundException;
 import com.microservices.todo.infrastructure.entity.Todo;
 import com.microservices.todo.infrastructure.repository.TodoRepository;
 import com.microservices.todo.mapper.TodoMapper;
-import io.awspring.cloud.sqs.operations.SqsTemplate;
+import com.microservices.todo.outbox.OutboxService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,16 +23,22 @@ import java.util.UUID;
 public class TodoService {
 
     private final TodoRepository repository;
-    private final SqsTemplate sqsTemplate;
+    private final OutboxService outboxService;
     private final TodoMapper mapper;
 
+    @Transactional
     public TodoResponseDTO create(TodoRequestDTO dto) {
         Todo entity = mapper.toEntity(dto);
         entity.setId(UUID.randomUUID().toString());
         entity.setCreatedAt(LocalDateTime.now());
         Todo todo = repository.save(entity);
         TodoResponseDTO response = mapper.toResponse(todo);
-        publish(SqsConfig.QUEUE_CREATED, TodoEvent.of(response.id(), response.title(), "CREATED"));
+        outboxService.record(
+                SqsConfig.QUEUE_CREATED,
+                response.id(),
+                "CREATED",
+                TodoEvent.of(response.id(), response.title(), "CREATED")
+        );
         return response;
     }
 
@@ -45,6 +52,7 @@ public class TodoService {
         return mapper.toResponse(getOrThrow(id));
     }
 
+    @Transactional
     public TodoResponseDTO update(String id, TodoUpdateDTO dto) {
         Todo todo = getOrThrow(id);
         TodoSnapshot before = TodoSnapshot.from(todo);
@@ -53,20 +61,27 @@ public class TodoService {
 
         TodoResponseDTO response = mapper.toResponse(repository.save(todo));
         if (!before.equals(after)) {
-            publish(SqsConfig.QUEUE_UPDATED, TodoEvent.of(response.id(), response.title(), "UPDATED"));
+            outboxService.record(
+                    SqsConfig.QUEUE_UPDATED,
+                    response.id(),
+                    "UPDATED",
+                    TodoEvent.of(response.id(), response.title(), "UPDATED")
+            );
         }
         return response;
     }
 
+    @Transactional
     public void delete(String id) {
         repository.findById(id).ifPresent(todo -> {
             repository.delete(todo);
-            publish(SqsConfig.QUEUE_DELETED, TodoEvent.of(todo.getId(), todo.getTitle(), "DELETED"));
+            outboxService.record(
+                    SqsConfig.QUEUE_DELETED,
+                    todo.getId(),
+                    "DELETED",
+                    TodoEvent.of(todo.getId(), todo.getTitle(), "DELETED")
+            );
         });
-    }
-
-    private void publish(String queueName, TodoEvent event) {
-        sqsTemplate.send(queueName, event);
     }
 
     private Todo getOrThrow(String id) {
