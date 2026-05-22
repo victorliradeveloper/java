@@ -30,7 +30,9 @@ public class TodoService {
     public TodoResponseDTO create(TodoRequestDTO dto) {
         Todo entity = mapper.toEntity(dto);
         entity.setId(UUID.randomUUID().toString());
-        entity.setCreatedAt(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        entity.setCreatedAt(now);
+        entity.setUpdatedAt(now);
         Todo todo = repository.save(entity);
         TodoResponseDTO response = mapper.toResponse(todo);
         outboxService.record(
@@ -58,6 +60,12 @@ public class TodoService {
         TodoSnapshot before = TodoSnapshot.from(todo);
         mapper.updateEntity(dto, todo);
         TodoSnapshot after = TodoSnapshot.from(todo);
+
+        // Bump updatedAt apenas em mudanca real — PUT no-op nao mexe no campo,
+        // preservando idempotencia (igual ao evento UPDATED que so dispara em diff).
+        if (!before.equals(after)) {
+            todo.setUpdatedAt(LocalDateTime.now());
+        }
 
         TodoResponseDTO response = mapper.toResponse(repository.save(todo));
         if (!before.equals(after)) {

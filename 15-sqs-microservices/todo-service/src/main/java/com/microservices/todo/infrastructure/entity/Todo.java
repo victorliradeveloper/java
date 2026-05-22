@@ -28,4 +28,6 @@ public class Todo {
     private boolean completed;
 
     private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 }

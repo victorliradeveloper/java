@@ -15,6 +15,7 @@ public interface TodoMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "completed", constant = "false")
     Todo toEntity(TodoRequestDTO dto);
 
@@ -23,5 +24,6 @@ public interface TodoMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     void updateEntity(TodoUpdateDTO dto, @MappingTarget Todo todo);
 }
