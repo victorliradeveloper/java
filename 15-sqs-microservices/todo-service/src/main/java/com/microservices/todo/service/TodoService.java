@@ -1,6 +1,6 @@
 package com.microservices.todo.service;
 
-import com.microservices.todo.config.SqsConfig;
+import com.microservices.todo.config.MessagingConfig;
 import com.microservices.todo.dto.request.TodoRequestDTO;
 import com.microservices.todo.dto.request.TodoUpdateDTO;
 import com.microservices.todo.dto.response.TodoResponseDTO;
@@ -36,7 +36,7 @@ public class TodoService {
         Todo todo = repository.save(entity);
         TodoResponseDTO response = mapper.toResponse(todo);
         outboxService.record(
-                SqsConfig.QUEUE_CREATED,
+                MessagingConfig.TOPIC_TODO_EVENTS,
                 response.id(),
                 "CREATED",
                 TodoEvent.of(response.id(), response.title(), "CREATED")
@@ -70,7 +70,7 @@ public class TodoService {
         TodoResponseDTO response = mapper.toResponse(repository.save(todo));
         if (!before.equals(after)) {
             outboxService.record(
-                    SqsConfig.QUEUE_UPDATED,
+                    MessagingConfig.TOPIC_TODO_EVENTS,
                     response.id(),
                     "UPDATED",
                     TodoEvent.of(response.id(), response.title(), "UPDATED")
@@ -84,7 +84,7 @@ public class TodoService {
         repository.findById(id).ifPresent(todo -> {
             repository.delete(todo);
             outboxService.record(
-                    SqsConfig.QUEUE_DELETED,
+                    MessagingConfig.TOPIC_TODO_EVENTS,
                     todo.getId(),
                     "DELETED",
                     TodoEvent.of(todo.getId(), todo.getTitle(), "DELETED")

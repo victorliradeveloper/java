@@ -10,10 +10,11 @@ Versão derivada de `01-microservices`, com RabbitMQ substituído por SQS.
 |---|---|---|
 | `eureka-server` | 8761 | Service Discovery |
 | `api-gateway` | 8090 | Ponto de entrada da API |
-| `todo-service` | 8081 | CRUD de tarefas |
-| `notification-service` | 8082 | Consome eventos das filas SQS |
+| `todo-service` | 8081 | CRUD de tarefas (publisher SNS) |
+| `notification-service` | 8082 | Consome eventos e envia e-mail |
+| `audit-service` | 8083 | Consome eventos e mantém log imutável |
 | `mongo` | 27017 | Banco de dados (replica set single-node) |
-| `localstack` | 4566 | Emulador AWS (SQS) |
+| `localstack` | 4566 | Emulador AWS (SQS + SNS) |
 | `redis` | 6379 | Backend do rate limiter |
 
 ## Pré-requisitos
@@ -28,7 +29,14 @@ docker compose up --build
 
 Na primeira execução aguarde ~3-5 minutos para download das imagens e compilação.
 
-O LocalStack cria automaticamente as 3 filas SQS principais + 3 DLQs (com `RedrivePolicy`, `maxReceiveCount=3`) via script em `localstack/init-aws.sh`. Ver [`.spec/03-patterns/dlq.md`](./.spec/03-patterns/dlq.md).
+O LocalStack provisiona automaticamente o pipeline SNS + SQS fan-out via [`localstack/init-aws.sh`](./localstack/init-aws.sh):
+
+- 1 topic SNS `todo-events` (ponto único de publicação)
+- 4 filas SQS principais (3 inscritas com `FilterPolicy` por `action`, 1 sem filtro)
+- 4 DLQs com `RedrivePolicy` (`maxReceiveCount=3`)
+- Long polling (`ReceiveMessageWaitTimeSeconds=20`) em todas as filas
+
+Patterns documentados em [`.spec/03-patterns/`](./.spec/03-patterns/): [outbox](./.spec/03-patterns/outbox.md), [fan-out](./.spec/03-patterns/fan-out.md), [dlq](./.spec/03-patterns/dlq.md), [mongock](./.spec/03-patterns/mongock.md).
 
 ## Endpoints
 
@@ -77,15 +85,20 @@ curl -X DELETE http://localhost:8090/todos/{id}
 
 ## SQS via LocalStack
 
-As filas sobem automaticamente quando o container LocalStack está pronto:
+Topology completo provisionado pelo init script:
 
-| Principal | DLQ |
-|---|---|
-| `todo-created-queue` | `todo-created-dlq` |
-| `todo-updated-queue` | `todo-updated-dlq` |
-| `todo-deleted-queue` | `todo-deleted-dlq` |
+```
+todo-service ──► SNS topic (todo-events) ──┬─► todo-created-queue ──► notification-service
+                                           │   (filter: action=CREATED)
+                                           ├─► todo-updated-queue ──► notification-service
+                                           │   (filter: action=UPDATED)
+                                           ├─► todo-deleted-queue ──► notification-service
+                                           │   (filter: action=DELETED)
+                                           └─► todo-audit-queue   ──► audit-service
+                                               (sem filtro)
+```
 
-Após 3 entregas com falha, a mensagem é movida automaticamente pra DLQ correspondente. Detalhes em [`.spec/03-patterns/dlq.md`](./.spec/03-patterns/dlq.md).
+Cada fila tem DLQ correspondente (sufixo `-dlq`). Após 3 entregas com falha, mensagem move pra DLQ. Detalhes em [`.spec/03-patterns/fan-out.md`](./.spec/03-patterns/fan-out.md) e [`.spec/03-patterns/dlq.md`](./.spec/03-patterns/dlq.md).
 
 ### Inspecionar filas via AWS CLI
 

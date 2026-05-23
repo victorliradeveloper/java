@@ -14,8 +14,11 @@ spring:
         secret-key: ${SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY:test}
       region:
         static: ${SPRING_CLOUD_AWS_REGION_STATIC:us-east-1}
-      sqs:
-        endpoint: ${SPRING_CLOUD_AWS_SQS_ENDPOINT:http://localhost:4566}
+      # todo-service publica no SNS (publisher) — nao consome SQS.
+      # Endpoint aponta pro LocalStack em dev; em prod real os endpoints
+      # da AWS sao detectados automaticamente pela regiao.
+      sns:
+        endpoint: ${SPRING_CLOUD_AWS_SNS_ENDPOINT:http://localhost:4566}
 
 server:
   port: 8081

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microservices.todo.event.TodoEvent;
 import com.microservices.todo.infrastructure.entity.OutboxEvent;
 import com.microservices.todo.infrastructure.repository.OutboxEventRepository;
-import io.awspring.cloud.sqs.operations.SqsTemplate;
+import io.awspring.cloud.sns.core.SnsTemplate;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,7 +26,7 @@ import java.util.UUID;
 public class OutboxPublisher {
 
     private final OutboxEventRepository repository;
-    private final SqsTemplate sqsTemplate;
+    private final SnsTemplate snsTemplate;
     private final ObjectMapper objectMapper;
 
     // Self-injection pra que publishOne(@Transactional REQUIRES_NEW) passe pelo
@@ -41,11 +42,11 @@ public class OutboxPublisher {
     private long leaseDurationMs;
 
     public OutboxPublisher(OutboxEventRepository repository,
-                           SqsTemplate sqsTemplate,
+                           SnsTemplate snsTemplate,
                            ObjectMapper objectMapper,
                            @Lazy OutboxPublisher self) {
         this.repository = repository;
-        this.sqsTemplate = sqsTemplate;
+        this.snsTemplate = snsTemplate;
         this.objectMapper = objectMapper;
         this.self = self;
     }
@@ -81,7 +82,11 @@ public class OutboxPublisher {
     public void publishOne(OutboxEvent event) {
         try {
             TodoEvent payload = objectMapper.readValue(event.getPayload(), TodoEvent.class);
-            sqsTemplate.send(event.getDestination(), payload);
+            // O header "action" eh propagado como SNS message attribute e usado
+            // pelo FilterPolicy das subscriptions (ver init-aws.sh). Sem isso,
+            // todas as filas receberiam todos os eventos.
+            Map<String, Object> headers = Map.of("action", event.getEventType());
+            snsTemplate.convertAndSend(event.getDestination(), payload, headers);
             event.markPublished();
             log.info("[OUTBOX] publicado id={} destination={} eventType={}",
                     event.getId(), event.getDestination(), event.getEventType());

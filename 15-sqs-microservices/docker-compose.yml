@@ -42,7 +42,7 @@ services:
     ports:
       - "4566:4566"
     environment:
-      SERVICES: sqs
+      SERVICES: sqs,sns
       DEFAULT_REGION: us-east-1
       AWS_DEFAULT_REGION: us-east-1
       DEBUG: "0"
@@ -89,7 +89,7 @@ services:
     container_name: todo-service
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/tododb?replicaSet=rs0
-      SPRING_CLOUD_AWS_SQS_ENDPOINT: http://localstack:4566
+      SPRING_CLOUD_AWS_SNS_ENDPOINT: http://localstack:4566
       SPRING_CLOUD_AWS_REGION_STATIC: us-east-1
       SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
       SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
@@ -126,6 +126,28 @@ services:
       NOTIFICATION_MAIL_TO: ${NOTIFICATION_MAIL_TO}
     ports:
       - "8082:8082"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - microservices-net
+
+  audit-service:
+    build: ./audit-service
+    container_name: audit-service
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/auditdb?replicaSet=rs0
+      SPRING_CLOUD_AWS_SQS_ENDPOINT: http://localstack:4566
+      SPRING_CLOUD_AWS_REGION_STATIC: us-east-1
+      SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
+      SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8083:8083"
     depends_on:
       mongo:
         condition: service_healthy
