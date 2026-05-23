@@ -28,7 +28,7 @@ docker compose up --build
 
 Na primeira execução aguarde ~3-5 minutos para download das imagens e compilação.
 
-O LocalStack cria automaticamente as 3 filas SQS via script em `localstack/init-aws.sh`.
+O LocalStack cria automaticamente as 3 filas SQS principais + 3 DLQs (com `RedrivePolicy`, `maxReceiveCount=3`) via script em `localstack/init-aws.sh`. Ver [`.spec/03-patterns/dlq.md`](./.spec/03-patterns/dlq.md).
 
 ## Endpoints
 
@@ -77,11 +77,15 @@ curl -X DELETE http://localhost:8090/todos/{id}
 
 ## SQS via LocalStack
 
-As 3 filas sobem automaticamente quando o container LocalStack está pronto:
+As filas sobem automaticamente quando o container LocalStack está pronto:
 
-- `todo-created-queue`
-- `todo-updated-queue`
-- `todo-deleted-queue`
+| Principal | DLQ |
+|---|---|
+| `todo-created-queue` | `todo-created-dlq` |
+| `todo-updated-queue` | `todo-updated-dlq` |
+| `todo-deleted-queue` | `todo-deleted-dlq` |
+
+Após 3 entregas com falha, a mensagem é movida automaticamente pra DLQ correspondente. Detalhes em [`.spec/03-patterns/dlq.md`](./.spec/03-patterns/dlq.md).
 
 ### Inspecionar filas via AWS CLI
 

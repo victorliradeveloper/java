@@ -11,5 +11,12 @@ public final class SqsConfig {
     public static final String QUEUE_UPDATED = "todo-updated-queue";
     public static final String QUEUE_DELETED = "todo-deleted-queue";
 
+    // DLQs (dead-letter queues). Cada fila principal tem uma DLQ correspondente
+    // associada via RedrivePolicy (maxReceiveCount=3) no init-aws.sh.
+    // Ver .spec/03-patterns/dlq.md.
+    public static final String QUEUE_CREATED_DLQ = "todo-created-dlq";
+    public static final String QUEUE_UPDATED_DLQ = "todo-updated-dlq";
+    public static final String QUEUE_DELETED_DLQ = "todo-deleted-dlq";
+
     private SqsConfig() {}
 }
