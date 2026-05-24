@@ -35,6 +35,7 @@ public class TodoService {
         entity.setUpdatedAt(now);
         Todo todo = repository.save(entity);
         TodoResponseDTO response = mapper.toResponse(todo);
+
         outboxService.record(
                 MessagingConfig.TOPIC_TODO_EVENTS,
                 response.id(),

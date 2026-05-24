@@ -19,6 +19,55 @@ DEPOIS: publisher → 1 topic → N filas (publisher só conhece o topic)
 
 ---
 
+## O que é um topic
+
+Um **topic SNS** é um **canal de broadcast nomeado**. É só isso: um endereço pra onde se publica uma mensagem **uma vez**, e o SNS se encarrega de **entregar cópias** pra cada destino inscrito nele. No projeto, o topic se chama `todo-events` (ARN `arn:aws:sns:us-east-1:000000000000:todo-events`).
+
+Características essenciais:
+
+| Propriedade | Comportamento |
+|---|---|
+| **Pub/sub puro** | Quem publica não conhece quem consome. Adicionar/remover consumer = mexer na infra (subscription), nunca no publisher. |
+| **1-para-N por design** | Cada `publish` vira N entregas, uma por subscription inscrita. Se 4 filas estão inscritas, o topic gera até 4 cópias da mensagem (FilterPolicy pode reduzir). |
+| **Não armazena** | Topic é **pipe**, não buffer. Mensagem que chega num topic **sem subscriptions** se perde — não tem "inbox" pra leitura futura. Pra durabilidade, a fila SQS na ponta segura. |
+| **Sem ordem garantida** | SNS Standard não preserva ordem entre mensagens. Pra ordenação, existe SNS FIFO (caro, restritivo, fora do projeto). |
+| **Múltiplos protocolos** | Subscriptions podem ser SQS, HTTP/S, Lambda, email, SMS, mobile push. No projeto só usamos `--protocol sqs`. |
+| **Identificado por ARN** | Toda operação (publish, subscribe, listar) referencia o topic pelo ARN completo, não pelo nome curto. |
+
+### Diferença chave: topic vs fila
+
+| | SNS topic | SQS queue |
+|---|---|---|
+| Modelo | Pub/sub (broadcast) | Ponto-a-ponto (work queue) |
+| Armazena? | **Não** — distribui na hora | **Sim** — segura até consumer ler/deletar |
+| Entregas por `publish` | N (uma por subscription) | 1 (a mensagem ocupa um slot até alguém pegar) |
+| Quem consome? | Não consome — apenas distribui | Um consumer ack/deleta a mensagem |
+
+É por isso que o padrão **fan-out** combina os dois: topic faz o "broadcast pra quem quiser ouvir", e cada fila inscrita oferece **buffer + at-least-once + DLQ** pro seu consumer.
+
+### No fluxo do projeto
+
+```
+todo-service                    OutboxPublisher
+   │                                  │
+   ▼ outboxService.record(            ▼ snsTemplate.convertAndSend(
+       "todo-events", ...)               "todo-events", payload,
+                                          Map.of("action","CREATED"))
+
+                          ┌────► [SNS topic: todo-events] ◄────┐
+                          │                                    │
+                          │  Não persiste. Olha cada            │
+                          │  subscription. Entrega cópia        │
+                          │  pras que casam com FilterPolicy.   │
+                          │                                    │
+                          ▼                                    ▼
+               todo-{created,updated,deleted}-queue    todo-audit-queue
+```
+
+`MessagingConfig.TOPIC_TODO_EVENTS = "todo-events"` no `todo-service` é a única referência ao topic no código. Trocar de SNS pra Kafka seria mudar essa constante + o template — `TodoService` não precisa saber.
+
+---
+
 ## Componentes
 
 | Recurso AWS | Função |
