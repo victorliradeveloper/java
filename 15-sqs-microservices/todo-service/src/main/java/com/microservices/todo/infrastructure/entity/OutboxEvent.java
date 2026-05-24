@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
+import java.util.function.IntFunction;
 
 @Document(collection = "outbox_events")
 @Getter
@@ -56,19 +57,34 @@ public class OutboxEvent {
     @Field("lease_expires_at")
     private LocalDateTime leaseExpiresAt;
 
+    // Quando o evento volta a ser elegivel pro claim depois de uma falha.
+    // null = elegivel imediatamente (caso default pra evento recem-criado).
+    // claimNext ignora docs com next_attempt_at > now.
+    @Field("next_attempt_at")
+    private LocalDateTime nextAttemptAt;
+
     public void markPublished() {
         this.publishedAt = LocalDateTime.now();
         this.lastError = null;
         this.processingNode = null;
         this.leaseExpiresAt = null;
+        this.nextAttemptAt = null;
     }
 
-    // Libera o lease pra que o proximo ciclo do publisher tente de novo.
-    // Sem backoff por enquanto — retry imediato (~poll-interval depois).
-    public void markFailed(String reason) {
+    /**
+     * Marca o evento como falho e agenda a proxima tentativa.
+     *
+     * <p>A entidade nao decide *quando* retentar — apenas registra a falha,
+     * incrementa o contador e aplica o resultado da politica de retry recebida
+     * via {@code nextAttemptResolver} (tipicamente {@code BackoffPolicy::nextAttemptAt}).
+     * Isso mantem a entidade livre de dependencias de configuracao ou de geracao
+     * de aleatorios — a politica eh testavel e substituivel de forma independente.
+     */
+    public void markFailed(String reason, IntFunction<LocalDateTime> nextAttemptResolver) {
         this.attempts++;
         this.lastError = reason;
         this.processingNode = null;
         this.leaseExpiresAt = null;
+        this.nextAttemptAt = nextAttemptResolver.apply(this.attempts);
     }
 }

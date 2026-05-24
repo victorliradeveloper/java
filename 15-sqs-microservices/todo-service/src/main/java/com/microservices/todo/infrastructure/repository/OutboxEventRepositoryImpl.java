@@ -23,15 +23,23 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepositoryCustom {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime leaseExpiry = now.plus(leaseDuration);
 
-        // publishedAt == null AND (leaseExpiresAt == null OR leaseExpiresAt < now)
+        // Filtros do claim:
+        // - publishedAt == null         → evento ainda nao saiu
+        // - lease ausente ou expirado   → ninguem detem o lease
+        // - nextAttemptAt ausente ou <= now → ja eh hora de tentar (respeita backoff)
         Criteria leaseAvailable = new Criteria().orOperator(
                 Criteria.where("lease_expires_at").is(null),
                 Criteria.where("lease_expires_at").lt(now)
         );
+        Criteria backoffElapsed = new Criteria().orOperator(
+                Criteria.where("next_attempt_at").is(null),
+                Criteria.where("next_attempt_at").lte(now)
+        );
         Query query = new Query()
                 .addCriteria(new Criteria().andOperator(
                         Criteria.where("published_at").is(null),
-                        leaseAvailable
+                        leaseAvailable,
+                        backoffElapsed
                 ))
                 .with(Sort.by(Sort.Direction.ASC, "created_at"));
 

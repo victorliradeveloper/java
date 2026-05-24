@@ -7,7 +7,6 @@ import com.microservices.todo.infrastructure.repository.OutboxEventRepository;
 import io.awspring.cloud.sns.core.SnsTemplate;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -25,9 +24,13 @@ import java.util.UUID;
 @Slf4j
 public class OutboxPublisher {
 
+    private static final int MAX_LAST_ERROR_LENGTH = 2000;
+
     private final OutboxEventRepository repository;
     private final SnsTemplate snsTemplate;
     private final ObjectMapper objectMapper;
+    private final OutboxProperties properties;
+    private final BackoffPolicy backoffPolicy;
 
     // Self-injection pra que publishOne(@Transactional REQUIRES_NEW) passe pelo
     // proxy do Spring — chamada direta this.publishOne(...) ignoraria a TX nova.
@@ -35,23 +38,21 @@ public class OutboxPublisher {
     // Construtor escrito a mao porque Lombok nao propaga @Lazy pro parametro.
     private final OutboxPublisher self;
 
-    @Value("${outbox.batch-size:50}")
-    private int batchSize;
-
-    @Value("${outbox.lease-duration-ms:30000}")
-    private long leaseDurationMs;
+    private String nodeId;
 
     public OutboxPublisher(OutboxEventRepository repository,
                            SnsTemplate snsTemplate,
                            ObjectMapper objectMapper,
+                           OutboxProperties properties,
+                           BackoffPolicy backoffPolicy,
                            @Lazy OutboxPublisher self) {
         this.repository = repository;
         this.snsTemplate = snsTemplate;
         this.objectMapper = objectMapper;
+        this.properties = properties;
+        this.backoffPolicy = backoffPolicy;
         this.self = self;
     }
-
-    private String nodeId;
 
     @PostConstruct
     void initNodeId() {
@@ -63,10 +64,12 @@ public class OutboxPublisher {
         log.info("[OUTBOX] publisher iniciado nodeId={}", nodeId);
     }
 
+    // SpEL aqui referencia o property direto porque @Scheduled resolve o
+    // fixedDelayString no parse-time da anotacao, antes da injecao de OutboxProperties.
     @Scheduled(fixedDelayString = "${outbox.poll-interval-ms:2000}")
     public void publishPending() {
-        Duration lease = Duration.ofMillis(leaseDurationMs);
-        for (int i = 0; i < batchSize; i++) {
+        Duration lease = Duration.ofMillis(properties.leaseDurationMs());
+        for (int i = 0; i < properties.batchSize(); i++) {
             Optional<OutboxEvent> claimed = repository.claimNext(nodeId, lease);
             if (claimed.isEmpty()) {
                 return;
@@ -91,14 +94,16 @@ public class OutboxPublisher {
             log.info("[OUTBOX] publicado id={} destination={} eventType={}",
                     event.getId(), event.getDestination(), event.getEventType());
         } catch (Exception e) {
-            event.markFailed(truncate(e.toString()));
-            log.warn("[OUTBOX] falha id={} attempts={}: {}",
-                    event.getId(), event.getAttempts(), e.getMessage());
+            event.markFailed(truncate(e.toString()), backoffPolicy::nextAttemptAt);
+            log.warn("[OUTBOX] falha id={} attempts={} nextAttemptAt={}: {}",
+                    event.getId(), event.getAttempts(), event.getNextAttemptAt(), e.getMessage());
         }
         repository.save(event);
     }
 
     private String truncate(String s) {
-        return s != null && s.length() > 2000 ? s.substring(0, 2000) : s;
+        return s != null && s.length() > MAX_LAST_ERROR_LENGTH
+                ? s.substring(0, MAX_LAST_ERROR_LENGTH)
+                : s;
     }
 }

@@ -45,6 +45,13 @@ outbox:
   # Se o worker crashar antes de marcar publishedAt, o lease expira e outro
   # worker pode pegar o evento. Mantenha > tempo maximo plausivel de publish.
   lease-duration-ms: 30000
+  # Backoff exponencial entre tentativas de publish quando o SNS/SQS falha.
+  # Evita martelar dependencia degradada e dispersa retentativas no tempo
+  # (jitter de +/-25% aplicado em OutboxEvent.markFailed).
+  # Sequencia tipica com os defaults: 2s, 4s, 8s, 16s, 32s, 60s (cap), 60s, ...
+  backoff:
+    initial-ms: 2000
+    max-ms: 60000
 
 idempotency:
   # TTL das chaves de idempotencia na collection idempotency_keys. Aceita
