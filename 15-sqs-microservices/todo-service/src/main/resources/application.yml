@@ -46,6 +46,15 @@ outbox:
   # worker pode pegar o evento. Mantenha > tempo maximo plausivel de publish.
   lease-duration-ms: 30000
 
+idempotency:
+  # TTL das chaves de idempotencia na collection idempotency_keys. Aceita
+  # sintaxe Duration do Spring (24h, 90m, 7d). Padrao Stripe = 24h.
+  # Apos esse tempo, o Mongo apaga o doc automaticamente (TTL index criado
+  # pela V004_IdempotencyKeyIndexes).
+  key-ttl: 24h
+  # Tamanho maximo aceito pra header Idempotency-Key (Stripe padrao = 255).
+  max-key-length: 255
+
 mongock:
   # Pacote raiz onde Mongock procura @ChangeUnit. Restringe o scan
   # para evitar varrer todo o classpath.
