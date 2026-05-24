@@ -53,7 +53,59 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info
+        include: health, info, metrics, circuitbreakers, retries
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+# Configuracao Resilience4j pro envio de email via SMTP.
+# Nome 'smtp' bate com @CircuitBreaker(name="smtp") + @Retry(name="smtp") no EmailService.
+resilience4j:
+  circuitbreaker:
+    instances:
+      smtp:
+        # Janela deslizante baseada em CONTAGEM de chamadas (count-based) — mais
+        # previsivel que time-based em servico com volume baixo/medio.
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        # CB so comeca a decidir depois de ter dados suficientes — evita abrir
+        # com 1 erro em 1 chamada (estatisticamente irrelevante).
+        minimum-number-of-calls: 10
+        # Se >=50% das ultimas 20 chamadas falharem, abre o circuito.
+        failure-rate-threshold: 50
+        # Chamada >5s conta como "lenta"; se >=50% sao lentas, abre.
+        # Protege contra SMTP que responde mas com latencia degradada.
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 5s
+        # Tempo OPEN antes de testar com chamadas em HALF_OPEN.
+        wait-duration-in-open-state: 30s
+        # Quantas chamadas de teste permitir em HALF_OPEN antes de decidir
+        # voltar pra CLOSED ou OPEN de novo.
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        # Excecoes que CONTAM como falha (incrementam o failure rate).
+        record-exceptions:
+          - com.microservices.notification.exception.EmailDeliveryException
+          - org.springframework.mail.MailException
+          - jakarta.mail.MessagingException
+  retry:
+    instances:
+      smtp:
+        max-attempts: 3
+        wait-duration: 200ms
+        # Backoff exponencial: 200ms -> 400ms -> 800ms entre tentativas.
+        # Evita martelar SMTP que ja tava lento.
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        # So retentar em erro de SMTP real. CallNotPermittedException (CB OPEN)
+        # NAO entra aqui — propaga direto, sem retry inutil que so gasta tempo.
+        retry-exceptions:
+          - com.microservices.notification.exception.EmailDeliveryException
+          - org.springframework.mail.MailException
+          - jakarta.mail.MessagingException
 
 mongock:
   # Pacote raiz onde Mongock procura @ChangeUnit. Restringe o scan

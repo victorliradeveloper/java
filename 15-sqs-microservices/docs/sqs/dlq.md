@@ -82,7 +82,7 @@ docker exec localstack awslocal sqs start-message-move-task `
 
 ## Cuidados
 
-- **Não cobre tudo**: no projeto, falhas de SMTP **não** caem na DLQ — o dedupe grava `processed_messages` antes do envio, então o retry é descartado antes da 3ª entrega. Design explícito ("perde raro" vs "duplica raro"), ver [`.spec/01-issues/closed/idempotency.md`](../../.spec/01-issues/closed/idempotency.md).
+- **Cobertura de falhas SMTP** (mudança 2026-05-24): antes, falhas de SMTP **não** caíam na DLQ porque o dedupe gravava `processed_messages` antes do envio. Com a introdução do [Circuit Breaker no `EmailService`](../conceitos/circuit-breaker.md), a ordem foi invertida pra send-antes-dedupe — agora SMTP failures (incluindo `CallNotPermittedException` quando o CB está OPEN) propagam, msg volta pra fila, e após 3 tentativas cai na DLQ. Trade-off atualizado de "perde raro" pra "duplica raro" em [`.spec/01-issues/closed/idempotency.md`](../../.spec/01-issues/closed/idempotency.md) §1.3.
 - **DLQ não tem DLQ**: se o listener da DLQ falhar, a mensagem volta pra própria DLQ.
 - **Retenção**: padrão 4 dias (máx 14). Em produção, setar pra 14 — sem evidência preservada, DLQ vira arquivo morto.
 - **`maxReceiveCount`**: 3–5 é o sweet spot. Baixo demais = falso positivo em falha transiente; alto demais = demora pra perceber.

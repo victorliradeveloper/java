@@ -3,6 +3,8 @@ package com.microservices.notification.service;
 import com.microservices.notification.config.NotificationMailProperties;
 import com.microservices.notification.event.TodoEvent;
 import com.microservices.notification.exception.EmailDeliveryException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,10 @@ public class EmailService {
             "DELETED", "#dc2626"
     );
 
+    // Nome da instancia Resilience4j (vinculada via @CircuitBreaker(name=...) e @Retry(name=...)).
+    // Configurada em application.yml -> resilience4j.{circuitbreaker,retry}.instances.smtp.
+    static final String RESILIENCE_INSTANCE = "smtp";
+
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
     private final NotificationMailProperties mailProps;
@@ -45,6 +51,30 @@ public class EmailService {
         this.mailProps = mailProps;
     }
 
+    /**
+     * Envia o email do evento. Protegido por Circuit Breaker + Retry.
+     *
+     * <h3>Comportamento sob falha</h3>
+     * <ul>
+     *   <li><b>SMTP transiente</b> (timeout, 4xx soft): {@code @Retry} tenta novamente
+     *       com backoff exponencial. Sucesso eventual = transparente pro chamador.</li>
+     *   <li><b>SMTP sustentado</b>: depois de N falhas o {@code @CircuitBreaker} abre.
+     *       Chamadas seguintes lancam {@code CallNotPermittedException} imediatamente
+     *       (fail-fast) sem nem tentar SMTP — protege o servidor de retry storm.</li>
+     *   <li><b>CB OPEN -&gt; HALF_OPEN -&gt; CLOSED</b>: apos o cooldown, CB permite
+     *       N chamadas de teste. Se sucedem, CB fecha; se falham, abre de novo.</li>
+     * </ul>
+     *
+     * <h3>Interacao com SQS</h3>
+     * Qualquer excecao (EmailDeliveryException ou CallNotPermittedException) propaga
+     * pro listener; o {@code @SqsListener} nao acka a mensagem — SQS reentrega.
+     * Apos 3 tentativas falhas (maxReceiveCount), mensagem cai na DLQ.
+     *
+     * @throws EmailDeliveryException                                            erro real do SMTP
+     * @throws io.github.resilience4j.circuitbreaker.CallNotPermittedException   circuito aberto
+     */
+    @CircuitBreaker(name = RESILIENCE_INSTANCE)
+    @Retry(name = RESILIENCE_INSTANCE)
     public void send(TodoEvent event) {
         try {
             String html = renderTemplate(event);
