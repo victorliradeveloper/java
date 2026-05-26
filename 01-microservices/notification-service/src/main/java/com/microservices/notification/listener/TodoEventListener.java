@@ -3,6 +3,7 @@ package com.microservices.notification.listener;
 import com.microservices.notification.config.RabbitMQConfig;
 import com.microservices.notification.event.TodoEvent;
 import com.microservices.notification.infrastructure.repository.ProcessedMessageRepository;
+import com.microservices.notification.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -41,6 +42,7 @@ public class TodoEventListener {
     private static final String FAIL_PREFIX = "!fail";
 
     private final ProcessedMessageRepository processedMessageRepository;
+    private final EmailService emailService;
 
     @RabbitListener(queues = RabbitMQConfig.QUEUE_CREATED)
     public void onTodoCreated(TodoEvent event,
@@ -91,5 +93,8 @@ public class TodoEventListener {
         }
         log.info("[NOTIFICATION] Todo {} -> id={} | title='{}' | em={}",
                 event.action(), event.todoId(), event.title(), event.occurredAt());
+        // Envia o email — protegido por @CircuitBreaker + @Retry no EmailService.
+        // Qualquer excecao propaga -> Spring AMQP retry esgota -> DLQ via DLX.
+        emailService.send(event);
     }
 }

@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Secrets (env vars com SMTP_PASS, etc — nao commitar) ###
+.env
+*.env
+!.env.example
