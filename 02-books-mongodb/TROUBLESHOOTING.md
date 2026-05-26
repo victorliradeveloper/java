@@ -27,20 +27,20 @@ Resultado: serviço `MongoDB` com status `Running` e dois processos distintos es
 
 ### Solução
 
-Alterar a porta exposta do container Docker de `27017` para `27018`, evitando o conflito com o serviço local.
+Alterar a porta exposta do container Docker de `27017` para `27020`, evitando o conflito com o serviço local.
 
 **docker-compose.yml:**
 ```yaml
 ports:
-  - "27018:27017"
+  - "27020:27017"
 ```
 
 **application.properties:**
 ```properties
-spring.data.mongodb.uri=mongodb://root:mongo123@localhost:27018/bookstore-mongo?authSource=admin
+spring.data.mongodb.uri=mongodb://root:mongo123@localhost:27020/bookstore-mongo?authSource=admin
 ```
 
 **URL de conexão no Compass:**
 ```
-mongodb://root:mongo123@127.0.0.1:27018/?authSource=admin&directConnection=true
+mongodb://root:mongo123@127.0.0.1:27020/?authSource=admin&directConnection=true
 ```
