@@ -42,3 +42,11 @@ idempotency:
   max-key-length: 255         # limite defensivo pra evitar abuso
   cleanup-interval: PT1H      # frequencia do job de limpeza de claims expirados
   cleanup-initial-delay: PT5M # atraso inicial pra nao competir com startup
+
+outbox:
+  poll-interval-ms: 2000      # intervalo entre ciclos do @Scheduled do publisher
+  batch-size: 50              # max eventos por ciclo (protege a TX de crescer demais)
+  lease-duration-ms: 30000    # TTL do lease quando um worker reivindica um evento
+  backoff:
+    initial-ms: 2000          # primeiro retry depois de ~2s (com +/-25% de jitter)
+    max-ms: 60000             # cap em 60s — sequencia: 2s, 4s, 8s, 16s, 32s, 60s, 60s, ...
