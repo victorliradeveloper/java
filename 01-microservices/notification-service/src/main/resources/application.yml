@@ -1,11 +1,35 @@
 spring:
   application:
     name: notification-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/notificationdb}
+    username: ${SPRING_DATASOURCE_USERNAME:todo_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:todo_pass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST:localhost}
     port: 5672
     username: ${SPRING_RABBITMQ_USERNAME:guest}
     password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        # Retry em memoria com backoff exponencial. Apos esgotar tentativas,
+        # a msg eh rejeitada sem requeue — o RabbitMQ entao a roteia pela DLX
+        # configurada no x-dead-letter-exchange das filas principais.
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 2000ms
+          multiplier: 2.0
+          max-interval: 10000ms
+        # Critico: msgs rejeitadas NAO voltam pra fila (sem isso a DLX nunca dispara).
+        default-requeue-rejected: false
 
 server:
   port: 8082
@@ -22,3 +46,8 @@ management:
     web:
       exposure:
         include: health, info
+
+processed-messages:
+  retention: PT24H              # janela em que um messageId continua sendo considerado duplicata
+  cleanup-interval: PT1H        # frequencia do job de limpeza
+  cleanup-initial-delay: PT5M   # atraso inicial pra nao competir com startup

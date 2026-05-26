@@ -84,7 +84,12 @@ public class OutboxPublisher {
     public void publishOne(OutboxEvent event) {
         try {
             TodoEvent payload = objectMapper.readValue(event.getPayload(), TodoEvent.class);
-            rabbitTemplate.convertAndSend(event.getExchange(), event.getRoutingKey(), payload);
+            // O messageId AMQP eh setado com o outbox.id pra que o consumer possa
+            // deduplicar (mesma linha retentada -> mesmo messageId).
+            rabbitTemplate.convertAndSend(event.getExchange(), event.getRoutingKey(), payload, msg -> {
+                msg.getMessageProperties().setMessageId(event.getId());
+                return msg;
+            });
             event.markPublished();
             log.info("[OUTBOX] publicado id={} exchange={} rk={} eventType={}",
                     event.getId(), event.getExchange(), event.getRoutingKey(), event.getEventType());

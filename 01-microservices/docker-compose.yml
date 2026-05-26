@@ -12,6 +12,9 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      # Roda uma unica vez na primeira inicializacao (quando o volume esta vazio).
+      # Cria os databases secundarios por servico (notificationdb, ...).
+      - ./postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
     networks:
       - microservices-net
     healthcheck:
@@ -92,6 +95,9 @@ services:
     build: ./notification-service
     container_name: notification-service
     environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notificationdb
+      SPRING_DATASOURCE_USERNAME: todo_user
+      SPRING_DATASOURCE_PASSWORD: todo_pass
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
@@ -99,6 +105,8 @@ services:
     ports:
       - "8082:8082"
     depends_on:
+      postgres:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       eureka-server:
