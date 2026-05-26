@@ -3,6 +3,7 @@ package com.microservices.todo.controller;
 import com.microservices.todo.dto.request.TodoRequestDTO;
 import com.microservices.todo.dto.request.TodoUpdateDTO;
 import com.microservices.todo.dto.response.TodoResponseDTO;
+import com.microservices.todo.idempotency.IdempotencyService;
 import com.microservices.todo.service.TodoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +18,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TodoController {
 
+    // Fingerprint identifica a operacao no hash da idempotencia: previne que
+    // a mesma key seja reusada acidentalmente em endpoints diferentes.
+    private static final String CREATE_FINGERPRINT = "POST /todos";
+
     private final TodoService service;
+    private final IdempotencyService idempotencyService;
 
     @PostMapping
-    public ResponseEntity<TodoResponseDTO> create(@RequestBody @Valid TodoRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(dto));
+    public ResponseEntity<TodoResponseDTO> create(
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            @RequestBody @Valid TodoRequestDTO dto) {
+        TodoResponseDTO body = idempotencyService.executeIdempotent(
+                idempotencyKey,
+                CREATE_FINGERPRINT,
+                dto,
+                TodoResponseDTO.class,
+                () -> service.create(dto)
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
 
     @GetMapping

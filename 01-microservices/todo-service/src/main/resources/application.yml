@@ -36,3 +36,9 @@ management:
     web:
       exposure:
         include: health, info
+
+idempotency:
+  key-ttl: PT24H              # janela em que uma key cacheada continua valida (padrao Stripe: 24h)
+  max-key-length: 255         # limite defensivo pra evitar abuso
+  cleanup-interval: PT1H      # frequencia do job de limpeza de claims expirados
+  cleanup-initial-delay: PT5M # atraso inicial pra nao competir com startup
