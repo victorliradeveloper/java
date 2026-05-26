@@ -114,6 +114,29 @@ services:
     networks:
       - microservices-net
 
+  audit-service:
+    build: ./audit-service
+    container_name: audit-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auditdb
+      SPRING_DATASOURCE_USERNAME: todo_user
+      SPRING_DATASOURCE_PASSWORD: todo_pass
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - microservices-net
+
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
