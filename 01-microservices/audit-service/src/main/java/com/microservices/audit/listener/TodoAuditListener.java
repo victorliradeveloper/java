@@ -4,15 +4,13 @@ import com.microservices.audit.config.RabbitMQConfig;
 import com.microservices.audit.event.TodoEvent;
 import com.microservices.audit.infrastructure.entity.TodoAuditLog;
 import com.microservices.audit.infrastructure.repository.TodoAuditLogRepository;
+import com.microservices.audit.mapper.TodoAuditLogMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Consome TODOS os eventos do dominio Todo (uma fila so, bindada com {@code todo.#})
@@ -34,6 +32,7 @@ import java.util.UUID;
 public class TodoAuditListener {
 
     private final TodoAuditLogRepository repository;
+    private final TodoAuditLogMapper mapper;
 
     @RabbitListener(queues = RabbitMQConfig.QUEUE_AUDIT)
     public void onTodoEvent(TodoEvent event,
@@ -44,14 +43,7 @@ public class TodoAuditListener {
             return;
         }
 
-        TodoAuditLog auditLog = TodoAuditLog.builder()
-                .messageId(messageId)
-                .aggregateId(event.todoId())
-                .title(event.title())
-                .eventType(event.action())
-                .occurredAt(event.occurredAt())
-                .recordedAt(LocalDateTime.now())
-                .build();
+        TodoAuditLog auditLog = mapper.toAuditLog(event, messageId);
 
         boolean inserted = repository.insertIfAbsent(auditLog);
         if (inserted) {
