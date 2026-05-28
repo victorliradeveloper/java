@@ -71,6 +71,70 @@ copiando campos, MapStruct ganha**.
 
 ---
 
+## Mapeamento implícito: omitir `@Mapping` quando os nomes batem
+
+MapStruct **infere automaticamente** o mapeamento quando o nome do
+campo no destino é igual ao nome do campo (ou parâmetro) na origem.
+Anotações `@Mapping(source = "x", target = "x")` redundantes podem ser
+removidas — o código gerado é exatamente o mesmo.
+
+### Exemplo no projeto
+
+Versão verbosa do `TodoAuditLogMapper` (que existiu por pouco tempo):
+
+```java
+@Mapping(target = "messageId",   source = "messageId")        // redundante
+@Mapping(target = "aggregateId", source = "event.todoId")
+@Mapping(target = "title",       source = "event.title")      // redundante
+@Mapping(target = "eventType",   source = "event.action")
+@Mapping(target = "occurredAt",  source = "event.occurredAt") // redundante
+@Mapping(target = "recordedAt",  expression = "java(java.time.LocalDateTime.now())")
+TodoAuditLog toAuditLog(TodoEvent event, String messageId);
+```
+
+Versão enxuta — só sobra o que é **necessário**:
+
+```java
+@Mapping(target = "aggregateId", source = "event.todoId")
+@Mapping(target = "eventType",   source = "event.action")
+@Mapping(target = "recordedAt",  expression = "java(java.time.LocalDateTime.now())")
+TodoAuditLog toAuditLog(TodoEvent event, String messageId);
+```
+
+A implementação gerada no `target/generated-sources/.../TodoAuditLogMapperImpl.java`
+continua copiando os 6 campos. Os três removidos foram resolvidos por inferência:
+
+| Campo | Origem inferida |
+|---|---|
+| `messageId` | Parâmetro `String messageId` com o mesmo nome |
+| `title` | `event.title()` — mesmo nome no único bean parâmetro |
+| `occurredAt` | `event.occurredAt()` — idem |
+
+### Quando ainda **precisa** ser explícito
+
+- **Nomes diferentes**: `todoId` → `aggregateId`, `action` → `eventType`.
+- **`expression`, `constant` ou `ignore`**: não são cópia — exigem `@Mapping`.
+- **Ambiguidade**: se houvesse um campo `messageId` dentro de `TodoEvent` **e** o parâmetro `String messageId`, MapStruct falharia o build pedindo desambiguação.
+
+### Quanto confiar na inferência
+
+Confio porque:
+
+1. **Os testes cobrem cada campo individualmente** — se a inferência quebrasse,
+   `TodoAuditLogMapperTest` viraria vermelho na hora.
+2. **O código gerado é legível** — abrir o `*Impl.java` em `target/generated-sources`
+   confirma o que foi mapeado em ~10 segundos.
+3. **Renomear quebra explicitamente**: se alguém renomear `title` → `name`
+   na entidade, o match implícito some e o `Impl` para de copiar — os testes
+   pegam imediatamente.
+
+> Para um modo paranoico opcional, dá pra adicionar
+> `unmappedTargetPolicy = ReportingPolicy.ERROR` ao `@Mapper`: o build
+> passa a falhar se algum campo do destino ficar sem origem. Não está
+> ativado no projeto, mas é uma rede de segurança fácil de ligar depois.
+
+---
+
 ## Onde está sendo usado no projeto
 
 ### todo-service — [`TodoMapper.java`](../../todo-service/src/main/java/com/microservices/todo/mapper/TodoMapper.java)
