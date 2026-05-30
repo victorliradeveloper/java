@@ -19,14 +19,40 @@ public class RabbitMQConfig {
     public static final String ROUTING_UPDATED  = "todo.updated";
     public static final String ROUTING_DELETED  = "todo.deleted";
 
+    public static final String DLX = "todo.dlx";
+
     @Bean
     public TopicExchange todoExchange() {
         return new TopicExchange(EXCHANGE);
     }
 
-    @Bean public Queue createdQueue() { return new Queue(QUEUE_CREATED, true); }
-    @Bean public Queue updatedQueue() { return new Queue(QUEUE_UPDATED, true); }
-    @Bean public Queue deletedQueue() { return new Queue(QUEUE_DELETED, true); }
+    // Args precisam ser identicos aos do consumer (notification-service): RabbitMQ
+    // retorna PRECONDITION_FAILED se um lado declara com x-dead-letter-exchange e
+    // o outro sem. Topologia da DLX (exchange + DLQs + bindings) e' declarada no
+    // consumer — aqui so' garantimos o match dos args da fila principal.
+    @Bean
+    public Queue createdQueue() {
+        return QueueBuilder.durable(QUEUE_CREATED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", ROUTING_CREATED)
+                .build();
+    }
+
+    @Bean
+    public Queue updatedQueue() {
+        return QueueBuilder.durable(QUEUE_UPDATED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", ROUTING_UPDATED)
+                .build();
+    }
+
+    @Bean
+    public Queue deletedQueue() {
+        return QueueBuilder.durable(QUEUE_DELETED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", ROUTING_DELETED)
+                .build();
+    }
 
     @Bean
     public Binding createdBinding() {

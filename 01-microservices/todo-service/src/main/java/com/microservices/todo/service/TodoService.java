@@ -11,11 +11,13 @@ import com.microservices.todo.mapper.TodoMapper;
 import com.microservices.todo.outbox.OutboxService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TodoService {
@@ -33,7 +35,10 @@ public class TodoService {
      */
     @Transactional
     public TodoResponseDTO create(TodoRequestDTO dto) {
+        log.info("create dto={}", dto);
         Todo todo = repository.save(mapper.toEntity(dto));
+        log.info("[TODO] persistido id={} title='{}' createdAt={}",
+                todo.getId(), todo.getTitle(), todo.getCreatedAt());
         TodoResponseDTO response = mapper.toResponse(todo);
         outboxService.record(
                 RabbitMQConfig.EXCHANGE,

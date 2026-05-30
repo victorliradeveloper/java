@@ -11,10 +11,6 @@ spring:
       # validate (em vez de update) garante que o schema bate com as entidades
       # sem deixar o Hibernate alterar nada. Schema eh gerenciado por Flyway.
       ddl-auto: validate
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
   flyway:
     enabled: true
     # Em DBs com tabelas pre-existentes (caso atual deste projeto), trata a

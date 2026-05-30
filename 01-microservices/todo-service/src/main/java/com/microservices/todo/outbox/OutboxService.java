@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microservices.todo.infrastructure.entity.OutboxEvent;
 import com.microservices.todo.infrastructure.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,6 +23,7 @@ import java.util.UUID;
  * propositalmente. Se este metodo abrisse uma TX nova, os dois inserts
  * poderiam divergir em caso de falha.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OutboxService {
@@ -46,6 +48,8 @@ public class OutboxService {
                 .createdAt(LocalDateTime.now())
                 .attempts(0)
                 .build();
+        log.info("[OUTBOX] enfileirado id={} aggregateId={} aggregateType={} eventType={} routingKey={}",
+                event.getId(), aggregateId, aggregateType, eventType, routingKey);
         repository.save(event);
     }
 
