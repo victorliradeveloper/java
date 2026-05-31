@@ -72,6 +72,9 @@ services:
     build: ./todo-service
     container_name: todo-service
     environment:
+      # Le do --env-file (.env.dev ou .env.prod). Cada um seta o profile
+      # correspondente. Sem flag, docker-compose carrega `.env` por default.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tododb
       SPRING_DATASOURCE_USERNAME: todo_user
       SPRING_DATASOURCE_PASSWORD: todo_pass

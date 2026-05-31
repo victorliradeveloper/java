@@ -1,0 +1,48 @@
+# Perfil PROD — postura defensiva, pensado pra deploy real.
+# Ativar via: SPRING_PROFILES_ACTIVE=prod  (env var no container/k8s)
+
+spring:
+  datasource:
+    # Sem fallback proposital: se a env var nao estiver setada, o app falha
+    # rapido no startup em vez de subir apontando pra um banco errado.
+    # Esse "fail fast" eh uma pratica importante em prod.
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    # Pool de conexoes dimensionado pra carga real (Hikari eh o default).
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    # Sem show-sql em prod: custo de log + risco de vazar dados sensiveis.
+    show-sql: false
+
+  flyway:
+    # clean-disabled: true (default) eh redundante mas explicito aqui pra
+    # documentar a intencao: NUNCA permitir reset do schema em prod.
+    clean-disabled: true
+    # Valida checksums das migrations ja aplicadas — detecta drift entre
+    # o que esta no banco e o que esta no classpath (migration alterada apos deploy).
+    validate-on-migrate: true
+
+logging:
+  level:
+    root: INFO
+    com.microservices.todo: INFO
+    # Hibernate silencioso em prod
+    org.hibernate.SQL: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Apenas o essencial. /env e /beans vazam config interna (URLs, credenciais
+        # mascaradas mas ainda assim sensiveis) e nao devem ficar publicos.
+        include: health, info
+  endpoint:
+    health:
+      # Em prod, esconde detalhes do health por padrao (so retorna UP/DOWN).
+      # Probes do orchestrador (k8s liveness/readiness) so precisam do status.
+      show-details: never

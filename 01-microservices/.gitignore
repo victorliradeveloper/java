@@ -33,6 +33,9 @@ build/
 .vscode/
 
 ### Secrets (env vars com SMTP_PASS, etc — nao commitar) ###
+# .env       → arquivo padrao usado pelo docker-compose
+# .env.*     → variantes por ambiente (.env.dev, .env.prod, .env.staging, ...)
+# Excecao: .env.example eh template SEM valores reais, esse vai pro git.
 .env
-*.env
+.env.*
 !.env.example
