@@ -1,2 +1,0 @@
-### Get Hello ###
-GET http://localhost:9000/client/hello
