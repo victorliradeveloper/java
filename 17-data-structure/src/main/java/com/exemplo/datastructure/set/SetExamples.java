@@ -10,9 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * Set: colecao sem duplicatas (Product e record, entao equals/hashCode
@@ -85,5 +89,31 @@ public class SetExamples {
     public Product treeMostExpensive() {
         log.info("GET /api/set/tree-most-expensive");
         return treeSet.isEmpty() ? null : treeSet.last();
+    }
+
+    @GetMapping("/wishlist-status")
+    public Map<String, Set<Long>> wishlistStatus(@RequestParam List<Long> ids) {
+        log.info("GET /api/set/wishlist-status?ids={}", ids);
+        Set<Long> catalogIds = repository.findAll().stream()
+                .map(Product::id).collect(Collectors.toSet());
+        Set<Long> inStockIds = repository.findAll().stream()
+                .filter(Product::hasStock).map(Product::id).collect(Collectors.toSet());
+        Set<Long> wishlist = new HashSet<>(ids);
+
+        Set<Long> available = new HashSet<>(wishlist);
+        available.retainAll(inStockIds);
+
+        Set<Long> outOfStock = new HashSet<>(wishlist);
+        outOfStock.retainAll(catalogIds);
+        outOfStock.removeAll(inStockIds);
+
+        Set<Long> unknown = new HashSet<>(wishlist);
+        unknown.removeAll(catalogIds);
+
+        Map<String, Set<Long>> result = new LinkedHashMap<>();
+        result.put("available", available);
+        result.put("outOfStock", outOfStock);
+        result.put("unknown", unknown);
+        return result;
     }
 }

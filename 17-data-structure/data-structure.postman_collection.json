@@ -1,0 +1,868 @@
+{
+  "info": {
+    "name": "data-structure",
+    "description": "Endpoints do projeto 17-data-structure (Spring Boot). Cada pasta corresponde a um controller que demonstra uma estrutura de dados.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "array",
+      "item": [
+        {
+          "name": "GET /api/array/get",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/array/get?index=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "array", "get"],
+              "query": [{ "key": "index", "value": "0" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/array/length",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/array/length",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "array", "length"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/array/all",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/array/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "array", "all"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/array/copy",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/array/copy?from=0&to=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "array", "copy"],
+              "query": [
+                { "key": "from", "value": "0" },
+                { "key": "to", "value": "3" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/array/contains",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/array/contains?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "array", "contains"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/array/filter-by-price",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/array/filter-by-price?max=500",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "array", "filter-by-price"],
+              "query": [{ "key": "max", "value": "500" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/array/moving-average-price",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/array/moving-average-price?window=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "array", "moving-average-price"],
+              "query": [{ "key": "window", "value": "3" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "item": [
+        {
+          "name": "GET /api/list/all",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/list/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "list", "all"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/list/add",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/list/add?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "list", "add"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/list/get",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/list/get?index=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "list", "get"],
+              "query": [{ "key": "index", "value": "0" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/list/remove",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/list/remove?index=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "list", "remove"],
+              "query": [{ "key": "index", "value": "0" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/list/index-of",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/list/index-of?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "list", "index-of"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/list/sub-list",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/list/sub-list?from=0&to=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "list", "sub-list"],
+              "query": [
+                { "key": "from", "value": "0" },
+                { "key": "to", "value": "3" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/list/checkout",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/list/checkout?tax=0.10&discount=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "list", "checkout"],
+              "query": [
+                { "key": "tax", "value": "0.10" },
+                { "key": "discount", "value": "0" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "linked-list",
+      "item": [
+        {
+          "name": "GET /api/linked-list/all",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/linked-list/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "linked-list", "all"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/linked-list/add-first",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/linked-list/add-first?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "linked-list", "add-first"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/linked-list/add-last",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/linked-list/add-last?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "linked-list", "add-last"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/linked-list/remove-first",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/linked-list/remove-first",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "linked-list", "remove-first"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/linked-list/remove-last",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/linked-list/remove-last",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "linked-list", "remove-last"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/linked-list/peek-first",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/linked-list/peek-first",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "linked-list", "peek-first"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/linked-list/peek-last",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/linked-list/peek-last",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "linked-list", "peek-last"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/linked-list/visit",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/linked-list/visit?id=1&capacity=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "linked-list", "visit"],
+              "query": [
+                { "key": "id", "value": "1" },
+                { "key": "capacity", "value": "5" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "stack",
+      "item": [
+        {
+          "name": "GET /api/stack/all",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/stack/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stack", "all"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/stack/push",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/stack/push?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stack", "push"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/stack/pop",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/stack/pop",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stack", "pop"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/stack/peek",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/stack/peek",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stack", "peek"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/stack/size",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/stack/size",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stack", "size"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/stack/undo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/stack/undo?steps=2",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stack", "undo"],
+              "query": [{ "key": "steps", "value": "2" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "queue",
+      "item": [
+        {
+          "name": "GET /api/queue/all",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/queue/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "queue", "all"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/queue/offer",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/queue/offer?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "queue", "offer"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/queue/poll",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/queue/poll",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "queue", "poll"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/queue/peek",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/queue/peek",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "queue", "peek"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/queue/size",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/queue/size",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "queue", "size"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/queue/process-batch",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/queue/process-batch?size=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "queue", "process-batch"],
+              "query": [{ "key": "size", "value": "3" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "deque",
+      "item": [
+        {
+          "name": "GET /api/deque/all",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/deque/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deque", "all"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/deque/add-first",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/deque/add-first?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deque", "add-first"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/deque/add-last",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/deque/add-last?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deque", "add-last"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/deque/remove-first",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/deque/remove-first",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deque", "remove-first"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/deque/remove-last",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/deque/remove-last",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deque", "remove-last"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/deque/products-in-stock",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/deque/products-in-stock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deque", "products-in-stock"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/deque/window-max-price",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/deque/window-max-price?window=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deque", "window-max-price"],
+              "query": [{ "key": "window", "value": "3" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "priority-queue",
+      "item": [
+        {
+          "name": "GET /api/priority-queue/cheapest",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/priority-queue/cheapest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "priority-queue", "cheapest"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/priority-queue/most-stocked",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/priority-queue/most-stocked",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "priority-queue", "most-stocked"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/priority-queue/offer",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/priority-queue/offer?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "priority-queue", "offer"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/priority-queue/poll",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/priority-queue/poll",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "priority-queue", "poll"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/priority-queue/peek",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/priority-queue/peek",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "priority-queue", "peek"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/priority-queue/top-cheapest-in-stock",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/priority-queue/top-cheapest-in-stock?k=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "priority-queue", "top-cheapest-in-stock"],
+              "query": [{ "key": "k", "value": "3" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set",
+      "item": [
+        {
+          "name": "GET /api/set/hash",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/set/hash",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "set", "hash"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/set/linked",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/set/linked",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "set", "linked"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/set/tree",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/set/tree",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "set", "tree"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/set/add",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/set/add?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "set", "add"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/set/contains",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/set/contains?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "set", "contains"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/set/tree-cheapest",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/set/tree-cheapest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "set", "tree-cheapest"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/set/tree-most-expensive",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/set/tree-most-expensive",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "set", "tree-most-expensive"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/set/wishlist-status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/set/wishlist-status?ids=1,2,3,99",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "set", "wishlist-status"],
+              "query": [{ "key": "ids", "value": "1,2,3,99" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "map",
+      "item": [
+        {
+          "name": "GET /api/map/hash",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/map/hash",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "map", "hash"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/map/linked",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/map/linked",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "map", "linked"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/map/tree",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/map/tree",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "map", "tree"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/map/put",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/map/put?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "map", "put"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/map/get",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/map/get?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "map", "get"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/map/keys",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/map/keys",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "map", "keys"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/map/get-or-default",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/map/get-or-default?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "map", "get-or-default"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/map/category-stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/map/category-stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "map", "category-stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "tree",
+      "item": [
+        {
+          "name": "GET /api/tree/insert",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tree/insert?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tree", "insert"],
+              "query": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/tree/contains",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tree/contains?price=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tree", "contains"],
+              "query": [{ "key": "price", "value": "100" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/tree/in-order",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tree/in-order",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tree", "in-order"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/tree/pre-order",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tree/pre-order",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tree", "pre-order"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/tree/post-order",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tree/post-order",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tree", "post-order"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/tree/price-range",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tree/price-range?min=100&max=1000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tree", "price-range"],
+              "query": [
+                { "key": "min", "value": "100" },
+                { "key": "max", "value": "1000" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

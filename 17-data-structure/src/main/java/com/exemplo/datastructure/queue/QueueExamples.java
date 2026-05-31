@@ -8,8 +8,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 /**
@@ -59,5 +63,23 @@ public class QueueExamples {
     public int size() {
         log.info("GET /api/queue/size");
         return orderQueue.size();
+    }
+
+    @GetMapping("/process-batch")
+    public Map<String, Object> processBatch(@RequestParam(defaultValue = "5") int size) {
+        log.info("GET /api/queue/process-batch?size={}", size);
+        List<Product> processed = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+        for (int i = 0; i < size && !orderQueue.isEmpty(); i++) {
+            Product p = orderQueue.poll();
+            processed.add(p);
+            total = total.add(p.price());
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("processed", processed);
+        result.put("totalProcessed", processed.size());
+        result.put("totalValue", total);
+        result.put("remaining", orderQueue.size());
+        return result;
     }
 }

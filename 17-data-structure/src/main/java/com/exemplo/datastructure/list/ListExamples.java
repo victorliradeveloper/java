@@ -8,8 +8,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * List (ArrayList): tamanho dinamico, acesso O(1) por indice,
@@ -68,5 +72,27 @@ public class ListExamples {
     public List<Product> subList(@RequestParam int from, @RequestParam int to) {
         log.info("GET /api/list/sub-list?from={}&to={}", from, to);
         return cart.subList(from, to);
+    }
+
+    @GetMapping("/checkout")
+    public Map<String, Object> checkout(@RequestParam(defaultValue = "0.10") BigDecimal tax,
+                                        @RequestParam(defaultValue = "0") BigDecimal discount) {
+        log.info("GET /api/list/checkout?tax={}&discount={}", tax, discount);
+        Map<String, BigDecimal> byCategory = new LinkedHashMap<>();
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (Product p : cart) {
+            subtotal = subtotal.add(p.price());
+            byCategory.merge(p.category(), p.price(), BigDecimal::add);
+        }
+        BigDecimal taxAmount = subtotal.multiply(tax).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal total = subtotal.add(taxAmount).subtract(discount).setScale(2, RoundingMode.HALF_UP);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("items", cart.size());
+        result.put("subtotal", subtotal.setScale(2, RoundingMode.HALF_UP));
+        result.put("tax", taxAmount);
+        result.put("discount", discount.setScale(2, RoundingMode.HALF_UP));
+        result.put("total", total);
+        result.put("byCategory", byCategory);
+        return result;
     }
 }

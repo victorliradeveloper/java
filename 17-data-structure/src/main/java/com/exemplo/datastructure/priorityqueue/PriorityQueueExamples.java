@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -77,5 +78,19 @@ public class PriorityQueueExamples {
                 .generate(pq::poll)
                 .takeWhile(java.util.Objects::nonNull)
                 .toList();
+    }
+
+    @GetMapping("/top-cheapest-in-stock")
+    public List<Product> topCheapestInStock(@RequestParam(defaultValue = "3") int k) {
+        log.info("GET /api/priority-queue/top-cheapest-in-stock?k={}", k);
+        PriorityQueue<Product> heap = new PriorityQueue<>(BY_PRICE_ASC);
+        for (Product p : repository.findAll()) {
+            if (p.hasStock()) heap.offer(p);
+        }
+        List<Product> top = new ArrayList<>();
+        for (int i = 0; i < k && !heap.isEmpty(); i++) {
+            top.add(heap.poll());
+        }
+        return top;
     }
 }

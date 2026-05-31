@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -53,6 +55,7 @@ public class MapExamples {
     @GetMapping("/linked")
     public Map<Long, Product> linked() {
         log.info("GET /api/map/linked -> {} entradas", linkedHashMap.size());
+        log.info("Linked Hash Map={}", linkedHashMap);
         return linkedHashMap;
     }
 
@@ -91,5 +94,36 @@ public class MapExamples {
         log.info("GET /api/map/get-or-default?id={}", id);
         Product fallback = new Product(-1L, "produto inexistente", null, "n/a", 0);
         return hashMap.getOrDefault(id, fallback);
+    }
+
+    @GetMapping("/category-stats")
+    public Map<String, Map<String, Object>> categoryStats() {
+        log.info("GET /api/map/category-stats");
+        Map<String, Map<String, Object>> stats = new LinkedHashMap<>();
+        for (Product p : repository.findAll()) {
+            stats.compute(p.category(), (cat, current) -> {
+                if (current == null) {
+                    Map<String, Object> initial = new LinkedHashMap<>();
+                    initial.put("count", 1);
+                    initial.put("totalStock", p.stock());
+                    initial.put("sumPrice", p.price());
+                    initial.put("minPrice", p.price());
+                    initial.put("maxPrice", p.price());
+                    return initial;
+                }
+                current.put("count", (int) current.get("count") + 1);
+                current.put("totalStock", (int) current.get("totalStock") + p.stock());
+                current.put("sumPrice", ((BigDecimal) current.get("sumPrice")).add(p.price()));
+                current.put("minPrice", ((BigDecimal) current.get("minPrice")).min(p.price()));
+                current.put("maxPrice", ((BigDecimal) current.get("maxPrice")).max(p.price()));
+                return current;
+            });
+        }
+        stats.values().forEach(m -> {
+            BigDecimal sum = (BigDecimal) m.remove("sumPrice");
+            int count = (int) m.get("count");
+            m.put("avgPrice", sum.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP));
+        });
+        return stats;
     }
 }

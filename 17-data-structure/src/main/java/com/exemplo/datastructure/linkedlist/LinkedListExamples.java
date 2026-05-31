@@ -71,4 +71,17 @@ public class LinkedListExamples {
         log.info("GET /api/linked-list/peek-last");
         return history.peekLast();
     }
+
+    @GetMapping("/visit")
+    public List<Product> visit(@RequestParam Long id, @RequestParam(defaultValue = "5") int capacity) {
+        log.info("GET /api/linked-list/visit?id={}&capacity={}", id, capacity);
+        repository.findById(id).ifPresent(product -> {
+            history.removeIf(p -> p.id().equals(id));
+            history.addFirst(product);
+            while (history.size() > capacity) {
+                history.removeLast();
+            }
+        });
+        return history;
+    }
 }

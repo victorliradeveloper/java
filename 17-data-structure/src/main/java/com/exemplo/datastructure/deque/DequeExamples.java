@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
@@ -60,5 +62,36 @@ public class DequeExamples {
     public Product removeLast() {
         log.info("GET /api/deque/remove-last");
         return deque.pollLast();
+    }
+
+    @GetMapping("/products-in-stock")
+    public List<Product> getProductsInStock(){
+        return List.copyOf(deque)
+                .stream()
+                .filter(Product::hasStock)
+                .toList();
+    }
+
+    @GetMapping("/window-max-price")
+    public List<BigDecimal> windowMaxPrice(@RequestParam(defaultValue = "3") int window) {
+        log.info("GET /api/deque/window-max-price?window={}", window);
+        List<Product> products = List.copyOf(deque);
+        if (window <= 0 || window > products.size()) return List.of();
+        Deque<Integer> indexes = new ArrayDeque<>();
+        List<BigDecimal> result = new ArrayList<>();
+        for (int i = 0; i < products.size(); i++) {
+            while (!indexes.isEmpty() && indexes.peekFirst() <= i - window) {
+                indexes.pollFirst();
+            }
+            while (!indexes.isEmpty() &&
+                    products.get(indexes.peekLast()).price().compareTo(products.get(i).price()) < 0) {
+                indexes.pollLast();
+            }
+            indexes.offerLast(i);
+            if (i >= window - 1) {
+                result.add(products.get(indexes.peekFirst()).price());
+            }
+        }
+        return result;
     }
 }

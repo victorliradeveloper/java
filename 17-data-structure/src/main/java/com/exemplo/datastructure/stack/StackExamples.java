@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
@@ -58,5 +59,15 @@ public class StackExamples {
     public int size() {
         log.info("GET /api/stack/size");
         return recentlyViewed.size();
+    }
+
+    @GetMapping("/undo")
+    public List<Product> undo(@RequestParam(defaultValue = "1") int steps) {
+        log.info("GET /api/stack/undo?steps={}", steps);
+        List<Product> undone = new ArrayList<>();
+        for (int i = 0; i < steps && !recentlyViewed.isEmpty(); i++) {
+            undone.add(recentlyViewed.pop());
+        }
+        return undone;
     }
 }

@@ -112,4 +112,20 @@ public class TreeExamples {
         postOrder(node.right, acc);
         acc.add(node.value);
     }
+
+    @GetMapping("/price-range")
+    public List<Product> priceRange(@RequestParam BigDecimal min, @RequestParam BigDecimal max) {
+        log.info("GET /api/tree/price-range?min={}&max={}", min, max);
+        List<Product> acc = new ArrayList<>();
+        rangeSearch(root, min, max, acc);
+        return acc;
+    }
+
+    private void rangeSearch(Node node, BigDecimal min, BigDecimal max, List<Product> acc) {
+        if (node == null) return;
+        BigDecimal price = node.value.price();
+        if (price.compareTo(min) > 0) rangeSearch(node.left, min, max, acc);
+        if (price.compareTo(min) >= 0 && price.compareTo(max) <= 0) acc.add(node.value);
+        if (price.compareTo(max) < 0) rangeSearch(node.right, min, max, acc);
+    }
 }

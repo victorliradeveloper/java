@@ -10,8 +10,8 @@ import java.util.Optional;
 public class ProductRepository {
 
     private final List<Product> products = List.of(
-            new Product(1L, "Notebook Dell XPS 13", new BigDecimal("8999.90"), "eletronicos", 12),
-            new Product(2L, "Mouse Logitech MX Master 3", new BigDecimal("549.00"), "eletronicos", 47),
+            new Product(1L, "Notebook Dell XPS 13", new BigDecimal("8999.90"), "eletronicos", 0),
+            new Product(2L, "Mouse Logitech MX Master 3", new BigDecimal("549.00"), "eletronicos", 0),
             new Product(3L, "Teclado Mecanico Keychron K2", new BigDecimal("899.90"), "eletronicos", 23),
             new Product(4L, "Cadeira Gamer DXRacer", new BigDecimal("2199.00"), "moveis", 8),
             new Product(5L, "Monitor LG UltraWide 34", new BigDecimal("3499.00"), "eletronicos", 15),

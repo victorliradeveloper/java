@@ -8,8 +8,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Array: tamanho fixo definido na criacao, acesso O(1) por indice.
@@ -59,5 +64,44 @@ public class ArrayExamples {
             if (p.id().equals(id)) return true;
         }
         return false;
+    }
+
+    @GetMapping("/filter-by-price")
+    public List<Product> filterByPrice(@RequestParam BigDecimal max) {
+        log.info("GET /api/array/filter-by-price?max={}", max);
+        return Arrays.stream(catalog)
+                .filter(p -> p.price().compareTo(max) < 0)
+                .toList();
+    }
+
+    @GetMapping("/moving-average-price")
+    public List<Map<String, Object>> movingAveragePrice(
+            @RequestParam(defaultValue = "3") int window
+    ) {
+        log.info("GET /api/array/moving-average-price?window={}", window);
+
+        if (window <= 0 || window > catalog.length) {
+            return List.of();
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        BigDecimal divisor = BigDecimal.valueOf(window);
+
+        for (int i = 0; i <= catalog.length - window; i++) {
+            BigDecimal sum = BigDecimal.ZERO;
+
+            for (int j = i; j < i + window; j++) {
+                sum = sum.add(catalog[j].price());
+            }
+
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("from", catalog[i].name());
+            entry.put("to", catalog[i + window - 1].name());
+            entry.put("average", sum.divide(divisor, 2, RoundingMode.HALF_UP));
+
+            result.add(entry);
+        }
+
+        return result;
     }
 }
