@@ -1,0 +1,98 @@
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/notificationdb}
+    username: ${SPRING_DATASOURCE_USERNAME:todo_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:todo_pass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    baseline-description: "Initial schema baseline"
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    # Sem default — startup falha rapido se nao vier configurado, em vez de
+    # autenticar com string vazia e dar erro confuso depois.
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
+    # Gmail (e a maioria dos SMTPs) exige AUTH + STARTTLS na 587.
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+server:
+  port: 8082
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, circuitbreakers, retries
+  endpoint:
+    health:
+      show-details: always
+
+# Endereco from/to do email. Vem do .env via docker-compose.
+# Sem default — forca configuracao explicita.
+notification:
+  mail:
+    from: ${NOTIFICATION_MAIL_FROM}
+    to: ${NOTIFICATION_MAIL_TO}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      smtp:
+        # Janela deslizante baseada em CONTAGEM de chamadas (count-based) — mais
+        # previsivel que time-based em servico com volume baixo/medio.
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        # CB so comeca a decidir depois de ter dados suficientes — evita abrir
+        # com 1 erro em 1 chamada (estatisticamente irrelevante).
+        minimum-number-of-calls: 10
+        # Se >=50% das ultimas 20 chamadas falharem, abre o circuito.
+        failure-rate-threshold: 50
+        # Chamada >5s conta como "lenta"; se >=50% sao lentas, abre.
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 5s
+        # Tempo OPEN antes de testar com chamadas em HALF_OPEN.
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - com.microservices.notification.exception.EmailDeliveryException
+          - org.springframework.mail.MailException
+          - jakarta.mail.MessagingException
+  retry:
+    instances:
+      smtp:
+        max-attempts: 3
+        wait-duration: 200ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - com.microservices.notification.exception.EmailDeliveryException
+          - org.springframework.mail.MailException
+          - jakarta.mail.MessagingException
+
+processed-events:
+  retention: PT24H              # janela em que um eventId continua sendo considerado duplicata
+  cleanup-interval: PT1H        # frequencia do job de limpeza
+  cleanup-initial-delay: PT5M   # atraso inicial pra nao competir com startup

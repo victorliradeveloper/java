@@ -1,0 +1,15 @@
+package com.microservices.todo.infrastructure.repository;
+
+import com.microservices.todo.infrastructure.entity.IdempotencyKey;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+
+import java.time.LocalDateTime;
+
+public interface IdempotencyKeyRepository extends JpaRepository<IdempotencyKey, String> {
+
+    @Modifying
+    @Query("delete from IdempotencyKey k where k.expiresAt < :now")
+    int deleteExpired(LocalDateTime now);
+}

@@ -1,0 +1,100 @@
+spring:
+  application:
+    name: todo-service
+
+  # Profile default. Env var SPRING_PROFILES_ACTIVE sobrescreve.
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate    # schema eh gerenciado por Flyway, Hibernate so valida
+
+  flyway:
+    enabled: true
+    # Trata V001 como baseline ja aplicada (DB ja tinha tabelas pre-existentes).
+    baseline-on-migrate: true
+    baseline-version: 1
+    baseline-description: "Initial schema baseline"
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            # Timeouts curtos: como esta no caminho critico do request HTTP do
+            # cliente, nao queremos segurar a request principal por muito tempo
+            # esperando downstream lento. Se passar disso, melhor cair no
+            # fallback rapido.
+            connect-timeout: 2000
+            read-timeout: 5000
+            logger-level: BASIC
+
+server:
+  port: 8081
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+# Config de negocio — nao varia entre dev e prod.
+idempotency:
+  key-ttl: PT24H              # janela em que uma key cacheada continua valida (padrao Stripe: 24h)
+  max-key-length: 255
+  cleanup-interval: PT1H      # frequencia da limpeza de claims expirados
+  cleanup-initial-delay: PT5M
+
+# Resilience4j: Circuit Breaker + Retry para chamadas aos downstreams.
+#
+# Filosofia: downstream caido NAO deve quebrar a operacao principal (criar/
+# atualizar/deletar Todo). Por isso usamos fallback que apenas LOGA — o cliente
+# do todo-service recebe 201/200 normalmente. Trade-off: eventos podem ser
+# perdidos quando o downstream esta indisponivel. Em prod real, esse fallback
+# escreveria num "dead letter" interno (tabela local) pra retry posterior.
+resilience4j:
+  circuitbreaker:
+    instances:
+      audit-service:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 3s
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+      notification-service:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 5s
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    instances:
+      audit-service:
+        max-attempts: 3
+        wait-duration: 200ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        # Nao retentar CallNotPermittedException: se o CB ta OPEN, retentar
+        # so' gasta tempo — vai direto pro fallback.
+        ignore-exceptions:
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
+      notification-service:
+        max-attempts: 3
+        wait-duration: 200ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        ignore-exceptions:
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException

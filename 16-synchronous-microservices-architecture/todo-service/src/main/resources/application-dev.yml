@@ -1,0 +1,22 @@
+# DEV — local. Fallbacks pra localhost, logs do projeto em DEBUG, Actuator aberto.
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/tododb}
+    username: ${SPRING_DATASOURCE_USERNAME:todo_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:todo_pass}
+
+  flyway:
+    clean-disabled: false       # permite `mvn flyway:clean` resetar o banco
+
+logging:
+  level:
+    com.microservices.todo: DEBUG
+  # Pra ver SQL sob demanda (sem reiniciar):
+  #   POST /actuator/loggers/org.hibernate.SQL  body: {"configuredLevel":"DEBUG"}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"            # todos os endpoints liberados
