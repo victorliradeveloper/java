@@ -1,43 +1,22 @@
-# Perfil DEV — otimizado pra desenvolvimento local.
-# Ativo por default (ver spring.profiles.active no application.yml).
-# Rodar com: ./mvnw spring-boot:run  (ou IDE)
+# DEV — local. Fallbacks pra localhost, logs do projeto em DEBUG, Actuator aberto.
 
 spring:
   datasource:
-    # Fallback pro postgres local do docker-compose. Em dev o desenvolvedor
-    # sobe o compose com `docker-compose up postgres rabbitmq eureka-server`
-    # e roda o app pela IDE/Maven apontando pra localhost.
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/tododb}
     username: ${SPRING_DATASOURCE_USERNAME:todo_user}
     password: ${SPRING_DATASOURCE_PASSWORD:todo_pass}
 
-  jpa:
-    # show-sql + format-sql ajudam a entender o que o Hibernate gera.
-    # Em prod isso polui o log e tem custo — fica off.
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
   flyway:
-    # clean-disabled: false permite `mvn flyway:clean` resetar o banco
-    # quando voce quer reaplicar migrations do zero. NUNCA habilitar em prod.
-    clean-disabled: false
+    clean-disabled: false       # permite `mvn flyway:clean` resetar o banco
 
 logging:
   level:
-    root: INFO
-    # DEBUG no codigo do projeto: ve fluxo de outbox, idempotencia, publishers
     com.microservices.todo: DEBUG
-    # SQL gerado pelo Hibernate
-    org.hibernate.SQL: DEBUG
-    # Parametros bindados ($1, $2, ...) — Hibernate 6+
-    org.hibernate.orm.jdbc.bind: TRACE
+  # Pra ver SQL sob demanda (sem reiniciar):
+  #   POST /actuator/loggers/org.hibernate.SQL  body: {"configuredLevel":"DEBUG"}
 
 management:
   endpoints:
     web:
       exposure:
-        # Expoe tudo em dev pra explorar: metrics, env, beans, mappings, etc.
-        # Util pra debug e pra aprender o que o Actuator oferece.
-        include: "*"
+        include: "*"            # todos os endpoints liberados

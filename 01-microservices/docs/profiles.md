@@ -77,14 +77,51 @@ O Spring **sempre** carrega `application.yml`. Em cima dele, carrega
 | Aspecto | dev | prod |
 |---|---|---|
 | Logging do projeto | `DEBUG` (vê fluxo do outbox, idempotência) | `INFO` |
-| SQL do Hibernate | `DEBUG` + parâmetros bindados | `WARN` |
-| `show-sql` | `true` (Hibernate mostra queries) | `false` |
+| SQL do Hibernate | `INFO` (silencioso por default — religue via Actuator) | `WARN` |
 | Datasource URL | Fallback `localhost:5432` se faltar env | **Sem fallback** — falha rápido no boot |
 | Pool de conexões | Default do Hikari | `maximum-pool-size: 20`, etc |
 | Flyway `clean` | Permitido (`clean-disabled: false`) | Bloqueado (`clean-disabled: true`) |
 | Flyway `validate-on-migrate` | Default | `true` (detecta drift de checksums) |
 | Actuator | `include: "*"` (todos os endpoints) | `include: health, info` |
 | `health` details | Default | `show-details: never` |
+
+### Por que dev não loga SQL por default
+
+O outbox poller faz um `SELECT` a cada 2 segundos (`outbox.poll-interval-ms`).
+Com `org.hibernate.SQL: DEBUG` + `show-sql: true` + `org.hibernate.orm.jdbc.bind: TRACE`,
+cada poll vira ~8 linhas de log = o stdout fica ilegível em menos de um minuto.
+
+A solução em dev é **religar SQL sob demanda** via Actuator (sem reiniciar):
+
+```http
+POST http://localhost:8081/actuator/loggers/org.hibernate.SQL
+Content-Type: application/json
+
+{ "configuredLevel": "DEBUG" }
+```
+
+Pra ver também os parâmetros bindados (`?` → valor real):
+
+```http
+POST http://localhost:8081/actuator/loggers/org.hibernate.orm.jdbc.bind
+Content-Type: application/json
+
+{ "configuredLevel": "TRACE" }
+```
+
+Pra desligar:
+
+```http
+POST http://localhost:8081/actuator/loggers/org.hibernate.SQL
+Content-Type: application/json
+
+{ "configuredLevel": null }
+```
+
+> Esse padrão (ajustar log em runtime via Actuator) é **prática real de
+> produção** — em prod, mexer no logging.level e reiniciar é custoso.
+> O endpoint `/actuator/loggers` permite fazer o ajuste no pod afetado
+> sem downtime. Em dev usamos isso pra evitar ruído do scheduler.
 
 **Por que isso importa**: em prod, se alguém esquecer de setar
 `SPRING_DATASOURCE_URL`, o app **não sobe** — em vez de subir apontando
