@@ -15,7 +15,7 @@ import java.util.UUID;
 public class PaymentProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessor.class);
-    private static final Duration PROCESSING_DELAY = Duration.ofSeconds(5);
+    private static final Duration PROCESSING_DELAY = Duration.ofSeconds(30);
 
     private final PaymentService paymentService;
     private final OrderServiceClient orderServiceClient;
