@@ -86,6 +86,6 @@ public class TodoService {
         // Cada notify tem seu proprio CircuitBreaker e fallback — falha de
         // um nao afeta o outro. Sequencial: o requisito eh sincrono total.
         downstreamNotifier.notifyAudit(event);
-        downstreamNotifier.notifyNotification(event);
+            downstreamNotifier.notifyNotification(event);
     }
 }

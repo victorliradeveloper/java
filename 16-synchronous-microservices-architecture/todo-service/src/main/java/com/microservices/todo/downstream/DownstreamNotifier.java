@@ -48,16 +48,16 @@ public class DownstreamNotifier {
     private final AuditClient auditClient;
     private final NotificationClient notificationClient;
 
-    @CircuitBreaker(name = "audit-service", fallbackMethod = "auditFallback")
-    @Retry(name = "audit-service")
+    @CircuitBreaker(name = "audit-service")
+    @Retry(name = "audit-service", fallbackMethod = "auditFallback")
     public void notifyAudit(TodoEventPayload event) {
         log.debug("[AUDIT-CALL] enviando eventId={} action={} todoId={}",
                 event.eventId(), event.action(), event.todoId());
         auditClient.recordEvent(event);
     }
 
-    @CircuitBreaker(name = "notification-service", fallbackMethod = "notificationFallback")
-    @Retry(name = "notification-service")
+    @CircuitBreaker(name = "notification-service")
+    @Retry(name = "notification-service", fallbackMethod = "notificationFallback")
     public void notifyNotification(TodoEventPayload event) {
         log.debug("[NOTIFICATION-CALL] enviando eventId={} action={} todoId={}",
                 event.eventId(), event.action(), event.todoId());
