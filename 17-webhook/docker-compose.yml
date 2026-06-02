@@ -27,6 +27,7 @@ services:
       SPRING_DATASOURCE_USERNAME: webhook_user
       SPRING_DATASOURCE_PASSWORD: webhook_pass
       PAYMENT_SERVICE_URL: http://payment-service:8082
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-dev-secret-change-me}
     ports:
       - "8081:8081"
     depends_on:
@@ -43,6 +44,7 @@ services:
       SPRING_DATASOURCE_USERNAME: webhook_user
       SPRING_DATASOURCE_PASSWORD: webhook_pass
       ORDER_SERVICE_URL: http://order-service:8081
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-dev-secret-change-me}
     ports:
       - "8082:8082"
     depends_on:

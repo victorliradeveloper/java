@@ -24,6 +24,9 @@ server:
 order-service:
   url: ${ORDER_SERVICE_URL:http://localhost:8081}
 
+webhook:
+  secret: ${WEBHOOK_SECRET:dev-secret-change-me}
+
 management:
   endpoints:
     web:

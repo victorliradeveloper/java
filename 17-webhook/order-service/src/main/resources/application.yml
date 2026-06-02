@@ -24,6 +24,9 @@ server:
 payment-service:
   url: ${PAYMENT_SERVICE_URL:http://localhost:8082}
 
+webhook:
+  secret: ${WEBHOOK_SECRET:dev-secret-change-me}
+
 management:
   endpoints:
     web:
