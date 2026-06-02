@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: webhook-postgres
+    environment:
+      POSTGRES_DB: orderdb
+      POSTGRES_USER: webhook_user
+      POSTGRES_PASSWORD: webhook_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    networks:
+      - webhook-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webhook_user -d orderdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/orderdb
+      SPRING_DATASOURCE_USERNAME: webhook_user
+      SPRING_DATASOURCE_PASSWORD: webhook_pass
+      PAYMENT_SERVICE_URL: http://payment-service:8082
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - webhook-net
+
+  payment-service:
+    build: ./payment-service
+    container_name: payment-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentdb
+      SPRING_DATASOURCE_USERNAME: webhook_user
+      SPRING_DATASOURCE_PASSWORD: webhook_pass
+      ORDER_SERVICE_URL: http://order-service:8081
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - webhook-net
+
+networks:
+  webhook-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
