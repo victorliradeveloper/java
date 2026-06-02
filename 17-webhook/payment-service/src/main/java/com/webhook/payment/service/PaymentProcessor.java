@@ -35,9 +35,14 @@ public class PaymentProcessor {
             log.warn("Processing interrupted for payment {}", paymentId);
             return;
         }
+        // 2) APROVAR — muda o status do Payment no banco pra APPROVED
         Payment approved = paymentService.updateStatus(paymentId, PaymentStatus.APPROVED);
+
+        // 3) GERAR eventId único — usado pra idempotência do lado do consumidor
         UUID eventId = UUID.randomUUID();
         log.info("Payment {} approved, notifying order service (event {})", paymentId, eventId);
+
+        // 4) DISPARAR O WEBHOOK — chamada HTTP de volta pro order-service
         orderServiceClient.notifyPayment(eventId, approved.orderId(), approved.status());
     }
 }
