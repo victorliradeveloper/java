@@ -3,26 +3,9 @@
                           │      CLIENTE HTTP       │
                           └────────────┬────────────┘
                                        │
-                          POST /orders │  GET /orders/{id}
+                          POST /payments
+                                       │
                                        ▼
-   ┌────────────────────────────────────────────────────────────────┐
-   │                   ORDER SERVICE  (porta 8081)                  │
-   │                                                                │
-   │   controller/  →  PaymentWebhookController  ←──┐               │
-   │       │                                        │               │
-   │       │                  security/ ─ WebhookSignatureFilter    │
-   │       ▼                  (só /webhooks/**, valida HMAC)        │
-   │   service/OrderService  @Transactional                         │
-   │       │                                                        │
-   │       ├──► repository/  OrderRepository                        │
-   │       │                 ProcessedWebhookEventRepository        │
-   │       │                                                        │
-   │       └──► client/PaymentClient  (RestClient)                  │
-   └────────────┬────────────────────────────▲──────────────────────┘
-                │                            │
-                │ POST /payments             │ POST /webhooks/payment
-                │ (síncrono)                 │ (assinado + retry)
-                ▼                            │
    ┌────────────────────────────────────────────────────────────────┐
    │                  PAYMENT SERVICE  (porta 8082)                 │
    │                                                                │
@@ -45,12 +28,30 @@
    │                  └─► sai com header X-Signature: sha256=...    │
    └────────────┬───────────────────────────────────────────────────┘
                 │
+                │ POST /webhooks/payment (assinado + retry)
+                ▼
+   ┌────────────────────────────────────────────────────────────────┐
+   │                   ORDER SERVICE  (porta 8081)                  │
+   │                                                                │
+   │   security/ ─ WebhookSignatureFilter                           │
+   │   (só /webhooks/**, valida HMAC)                               │
+   │       │                                                        │
+   │       ▼                                                        │
+   │   controller/PaymentWebhookController                          │
+   │       │                                                        │
+   │       ▼                                                        │
+   │   service/OrderService  @Transactional                         │
+   │       │                                                        │
+   │       └──► repository/  OrderRepository                        │
+   │                         ProcessedWebhookEventRepository        │
+   └────────────┬───────────────────────────────────────────────────┘
+                │
                 ▼
    ┌─────────────────────────┐         ┌─────────────────────────┐
-   │  orderdb  (Postgres 16) │         │ paymentdb (Postgres 16) │
-   │  - orders               │         │ - payments              │
-   │  - processed_webhook_   │         │ - flyway_schema_history │
-   │    events               │         └─────────────────────────┘
-   │  - flyway_schema_history│
-   └─────────────────────────┘
+   │ paymentdb (Postgres 16) │         │  orderdb  (Postgres 16) │
+   │ - payments              │         │  - orders               │
+   │ - flyway_schema_history │         │  - processed_webhook_   │
+   └─────────────────────────┘         │    events               │
+                                       │  - flyway_schema_history│
+                                       └─────────────────────────┘
 ```

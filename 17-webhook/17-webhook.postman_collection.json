@@ -1,0 +1,314 @@
+{
+  "info": {
+    "name": "17-webhook",
+    "description": "Collection for the order-service + payment-service webhook flow.\n\n## Variables\n- `orderServiceUrl` — base URL of order-service (default `http://localhost:8081`)\n- `paymentServiceUrl` — base URL of payment-service (default `http://localhost:8082`)\n- `webhookSecret` — shared HMAC secret (must match `WEBHOOK_SECRET` env var on both services, default `dev-secret-change-me`)\n- `orderId` — populated automatically by `POST /orders` (test script)\n- `paymentId` — populated automatically by `POST /payments` (test script)\n\n## Webhook signing\nThe `POST /webhooks/payment` request has a pre-request script that computes `HMAC-SHA256(rawBody, webhookSecret)` and sets the `X-Signature: sha256=<hex>` header.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "orderServiceUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "paymentServiceUrl",
+      "value": "http://localhost:8082",
+      "type": "string"
+    },
+    {
+      "key": "webhookSecret",
+      "value": "dev-secret-change-me",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "paymentId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Order Service",
+      "item": [
+        {
+          "name": "Create order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"product\": \"Notebook Dell XPS 15\",\n    \"amount\": 8999.90\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/orders",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["orders"]
+            },
+            "description": "Creates an order. The order-service then synchronously calls payment-service `POST /payments`, which kicks off the async processing that eventually fires the webhook back to `/webhooks/payment`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "if (body && body.id) {",
+                  "    pm.collectionVariables.set('orderId', body.id);",
+                  "    console.log('orderId =', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get order by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{orderServiceUrl}}/orders/{{orderId}}",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["orders", "{{orderId}}"]
+            },
+            "description": "Returns the current state of the order. Right after `Create order` the status is `PROCESSING`; after the webhook arrives (~5s) it becomes `APPROVED`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payment Service",
+      "item": [
+        {
+          "name": "Create payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"amount\": 8999.90\n}"
+            },
+            "url": {
+              "raw": "{{paymentServiceUrl}}/payments",
+              "host": ["{{paymentServiceUrl}}"],
+              "path": ["payments"]
+            },
+            "description": "Creates a payment directly (bypassing order-service). Responds 202 Accepted and triggers `PaymentProcessor.processAsync`, which sleeps 5s and then fires the signed webhook to `order-service`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 202', function () {",
+                  "    pm.response.to.have.status(202);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "if (body && body.id) {",
+                  "    pm.collectionVariables.set('paymentId', body.id);",
+                  "    console.log('paymentId =', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get payment by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{paymentServiceUrl}}/payments/{{paymentId}}",
+              "host": ["{{paymentServiceUrl}}"],
+              "path": ["payments", "{{paymentId}}"]
+            },
+            "description": "Returns the current state of the payment. Starts as `PROCESSING`, becomes `APPROVED` after the 5s async step."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook (manual)",
+      "description": "Lets you hit the order-service webhook endpoint directly to test signature validation and idempotency. The pre-request script computes the HMAC-SHA256 signature over the raw body using `{{webhookSecret}}` and sets the `X-Signature` header automatically.",
+      "item": [
+        {
+          "name": "POST /webhooks/payment (signed)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const secret = pm.collectionVariables.get('webhookSecret');",
+                  "const rawBody = pm.request.body && pm.request.body.raw ? pm.request.body.raw : '';",
+                  "",
+                  "const signature = CryptoJS.HmacSHA256(rawBody, secret).toString(CryptoJS.enc.Hex);",
+                  "pm.request.headers.upsert({ key: 'X-Signature', value: 'sha256=' + signature });",
+                  "",
+                  "console.log('Signed body:', rawBody);",
+                  "console.log('X-Signature: sha256=' + signature);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"eventId\": \"11111111-1111-1111-1111-111111111111\",\n    \"orderId\": \"{{orderId}}\",\n    \"status\": \"APPROVED\"\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/webhooks/payment",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["webhooks", "payment"]
+            },
+            "description": "Sends a signed webhook to order-service. Replays the same `eventId` to test idempotency — the second call should be no-op (status stays the same on the order)."
+          }
+        },
+        {
+          "name": "POST /webhooks/payment (no signature - expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"eventId\": \"22222222-2222-2222-2222-222222222222\",\n    \"orderId\": \"{{orderId}}\",\n    \"status\": \"APPROVED\"\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/webhooks/payment",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["webhooks", "payment"]
+            },
+            "description": "Hits the webhook endpoint without the `X-Signature` header. `WebhookSignatureFilter` should reject it with 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /webhooks/payment (bad signature - expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Signature",
+                "value": "sha256=deadbeef"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"eventId\": \"33333333-3333-3333-3333-333333333333\",\n    \"orderId\": \"{{orderId}}\",\n    \"status\": \"APPROVED\"\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/webhooks/payment",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["webhooks", "payment"]
+            },
+            "description": "Sends an obviously wrong signature to verify the constant-time comparison rejects it with 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Order service health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{orderServiceUrl}}/actuator/health",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Payment service health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{paymentServiceUrl}}/actuator/health",
+              "host": ["{{paymentServiceUrl}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

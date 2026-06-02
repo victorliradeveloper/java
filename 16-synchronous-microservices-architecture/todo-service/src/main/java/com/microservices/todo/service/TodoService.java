@@ -51,6 +51,9 @@ public class TodoService {
 
     public TodoResponseDTO create(TodoRequestDTO dto) {
         log.info("create dto={}", dto);
+        log.info("create dto={}", dto);
+        log.info("create dto={}", dto);
+        log.info("create dto={}", dto);
         TodoResponseDTO response = persistence.create(dto);
         notifyDownstreams(response.id(), response.title(), "CREATED");
         return response;
