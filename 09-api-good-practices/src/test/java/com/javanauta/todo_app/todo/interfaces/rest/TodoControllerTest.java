@@ -87,14 +87,7 @@ class TodoControllerTest {
                 .user(mockUser)
                 .build();
 
-        response = TodoResponseDTO.builder()
-                .id(1L)
-                .title("Study Java")
-                .description("Review streams")
-                .completed(false)
-                .createdAt(now)
-                .dueDate(now.plusDays(3))
-                .build();
+        response = new TodoResponseDTO(1L, "Study Java", "Review streams", false, now, now.plusDays(3));
 
         request = new TodoRequestDTO("Study Java", "Review streams", now.plusDays(3));
     }
@@ -142,10 +135,7 @@ class TodoControllerTest {
     @Test
     void list_withoutFilters_shouldReturnPaginatedItems() throws Exception {
         Page<Todo> page = new PageImpl<>(List.of(todo));
-        PagedResponseDTO<TodoResponseDTO> paged = PagedResponseDTO.<TodoResponseDTO>builder()
-                .content(List.of(response))
-                .page(0).size(20).totalElements(1).totalPages(1).last(true)
-                .build();
+        PagedResponseDTO<TodoResponseDTO> paged = new PagedResponseDTO<>(List.of(response), 0, 20, 1L, 1, true);
         when(todoUseCase.findAll(any(User.class), any(), any(Pageable.class))).thenReturn(page);
         when(todoMapper.toPagedResponse(any())).thenReturn(paged);
 
@@ -158,10 +148,7 @@ class TodoControllerTest {
     @Test
     void list_withTitleFilter_shouldReturnFilteredItems() throws Exception {
         Page<Todo> page = new PageImpl<>(List.of(todo));
-        PagedResponseDTO<TodoResponseDTO> paged = PagedResponseDTO.<TodoResponseDTO>builder()
-                .content(List.of(response))
-                .page(0).size(20).totalElements(1).totalPages(1).last(true)
-                .build();
+        PagedResponseDTO<TodoResponseDTO> paged = new PagedResponseDTO<>(List.of(response), 0, 20, 1L, 1, true);
         when(todoUseCase.findAll(any(User.class), any(), any(Pageable.class))).thenReturn(page);
         when(todoMapper.toPagedResponse(any())).thenReturn(paged);
 
@@ -172,13 +159,9 @@ class TodoControllerTest {
 
     @Test
     void list_withCompletedFilter_shouldReturnFilteredItems() throws Exception {
-        TodoResponseDTO completed = TodoResponseDTO.builder()
-                .id(2L).title("Done").completed(true).createdAt(LocalDateTime.now()).build();
+        TodoResponseDTO completed = new TodoResponseDTO(2L, "Done", null, true, LocalDateTime.now(), null);
         Page<Todo> page = new PageImpl<>(List.of(todo));
-        PagedResponseDTO<TodoResponseDTO> paged = PagedResponseDTO.<TodoResponseDTO>builder()
-                .content(List.of(completed))
-                .page(0).size(20).totalElements(1).totalPages(1).last(true)
-                .build();
+        PagedResponseDTO<TodoResponseDTO> paged = new PagedResponseDTO<>(List.of(completed), 0, 20, 1L, 1, true);
         when(todoUseCase.findAll(any(User.class), any(), any(Pageable.class))).thenReturn(page);
         when(todoMapper.toPagedResponse(any())).thenReturn(paged);
 
@@ -194,11 +177,7 @@ class TodoControllerTest {
     @Test
     void listWithCursor_withoutCursor_shouldReturnFirstPage() throws Exception {
         TodoPage todoPage = new TodoPage(List.of(todo), null, false);
-        CursorPageResponseDTO<TodoResponseDTO> cursorPage = CursorPageResponseDTO.<TodoResponseDTO>builder()
-                .content(List.of(response))
-                .nextCursor(null)
-                .hasNext(false)
-                .build();
+        CursorPageResponseDTO<TodoResponseDTO> cursorPage = new CursorPageResponseDTO<>(List.of(response), null, false);
         when(todoUseCase.listWithCursor(any(User.class), isNull(), eq(20))).thenReturn(todoPage);
         when(todoMapper.toCursorResponse(any(TodoPage.class))).thenReturn(cursorPage);
 
@@ -211,11 +190,7 @@ class TodoControllerTest {
     @Test
     void listWithCursor_withCursor_shouldReturnNextPage() throws Exception {
         TodoPage todoPage = new TodoPage(List.of(todo), 10L, true);
-        CursorPageResponseDTO<TodoResponseDTO> cursorPage = CursorPageResponseDTO.<TodoResponseDTO>builder()
-                .content(List.of(response))
-                .nextCursor(10L)
-                .hasNext(true)
-                .build();
+        CursorPageResponseDTO<TodoResponseDTO> cursorPage = new CursorPageResponseDTO<>(List.of(response), 10L, true);
         when(todoUseCase.listWithCursor(any(User.class), eq(5L), eq(20))).thenReturn(todoPage);
         when(todoMapper.toCursorResponse(any(TodoPage.class))).thenReturn(cursorPage);
 
@@ -284,8 +259,7 @@ class TodoControllerTest {
     void complete_whenExists_shouldReturn200() throws Exception {
         Todo completedTodo = Todo.builder()
                 .id(1L).title("Study Java").completed(true).createdAt(LocalDateTime.now()).build();
-        TodoResponseDTO completedResponse = TodoResponseDTO.builder()
-                .id(1L).title("Study Java").completed(true).createdAt(LocalDateTime.now()).build();
+        TodoResponseDTO completedResponse = new TodoResponseDTO(1L, "Study Java", null, true, LocalDateTime.now(), null);
         when(todoUseCase.complete(any(User.class), eq(1L))).thenReturn(completedTodo);
         when(todoMapper.toResponse(completedTodo)).thenReturn(completedResponse);
 

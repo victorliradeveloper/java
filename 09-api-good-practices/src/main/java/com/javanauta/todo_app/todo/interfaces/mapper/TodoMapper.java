@@ -31,21 +31,21 @@ public interface TodoMapper {
     List<TodoResponseDTO> toResponseList(List<Todo> todos);
 
     default PagedResponseDTO<TodoResponseDTO> toPagedResponse(Page<Todo> page) {
-        return PagedResponseDTO.<TodoResponseDTO>builder()
-                .content(toResponseList(page.getContent()))
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .last(page.isLast())
-                .build();
+        return new PagedResponseDTO<>(
+                toResponseList(page.getContent()),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isLast()
+        );
     }
 
     default CursorPageResponseDTO<TodoResponseDTO> toCursorResponse(TodoPage result) {
-        return CursorPageResponseDTO.<TodoResponseDTO>builder()
-                .content(toResponseList(result.content()))
-                .nextCursor(result.nextCursor())
-                .hasNext(result.hasNext())
-                .build();
+        return new CursorPageResponseDTO<>(
+                toResponseList(result.content()),
+                result.nextCursor(),
+                result.hasNext()
+        );
     }
 }

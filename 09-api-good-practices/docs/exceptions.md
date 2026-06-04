@@ -10,6 +10,45 @@ Este documento descreve o padrão de tratamento de exceções adotado neste proj
 - **`@RestControllerAdvice` traduz** a exceção para HTTP em um único lugar.
 - **Spring Security** tem entry point e access denied handler customizados para padronizar 401/403 no mesmo formato.
 
+## Onde o status HTTP é decidido
+
+Pergunta comum: "as exceptions têm a mensagem, mas onde define 404, 422, 500?"
+
+**Resposta: as exceptions de domínio NÃO carregam status code.** O status vive em 3 lugares diferentes do código, separados por intenção:
+
+| Tipo de resposta | Onde o status é definido | Como |
+|---|---|---|
+| **Sucesso (200/201/204)** | No **Controller** | `ResponseEntity.ok(...)`, `ResponseEntity.status(HttpStatus.CREATED).body(...)`, `ResponseEntity.noContent().build()` |
+| **Erro de domínio (404/409/422/...)** | No **`@RestControllerAdvice` da feature** (`TodoExceptionHandler`, `AuthExceptionHandler`) | `ResponseEntity.status(HttpStatus.X).body(ErrorResponseDTO.of(...))` |
+| **Erro de framework (400/500)** | No **`GlobalExceptionHandler`** (shared) | Idem, para `MethodArgumentNotValidException`, `Exception` catch-all, etc. |
+| **Erro de Spring Security (401/403)** | Em **`RestAuthenticationEntryPoint`** / **`RestAccessDeniedHandler`** | `response.setStatus(...)` direto no servlet response |
+
+A exception em si só carrega **mensagem**:
+
+```java
+// TodoNotFoundException — não sabe nada de HTTP
+public class TodoNotFoundException extends RuntimeException {
+    public TodoNotFoundException(Long id) {
+        super("Todo not found with id: " + id);
+    }
+}
+```
+
+O 404 só aparece quando o handler captura:
+
+```java
+// TodoExceptionHandler — AQUI o status é decidido
+@ExceptionHandler(TodoNotFoundException.class)
+public ResponseEntity<ErrorResponseDTO> handleNotFound(...) {
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)   // ← aqui
+            .body(ErrorResponseDTO.of(HttpStatus.NOT_FOUND.value(), ex.getMessage(), ...));
+}
+```
+
+**Vantagem**: a mesma exception poderia ser usada num CLI, batch, ou consumer de fila sem virar 404 — porque ela não tem HTTP grudado nela. Mudar de 404 para 410? Mexe 1 linha no handler, sem tocar exception, service ou controller.
+
+**Anti-padrão a evitar**: anotar a exception com `@ResponseStatus(HttpStatus.NOT_FOUND)` ou estender `ResponseStatusException`. Spring respeita ambos, mas isso amarra a exception ao mundo HTTP — perde a separação de camadas.
+
 ## Em qual camada vive cada coisa
 
 | Camada | Papel com exceções | Por quê |
