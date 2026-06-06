@@ -21,7 +21,13 @@ public interface TodoMapper {
 
     TodoResponseDTO toResponse(Todo todo);
 
+    // Os tres source/target abaixo sao redundantes — MapStruct ja casa
+    // por nome quando source e target tem o mesmo identificador. O certo
+    // seria omitir, mantidos aqui apenas como exemplo didatico.
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(source = "title",       target = "title")
+    @Mapping(source = "description", target = "description")
+    @Mapping(source = "completed",   target = "completed")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
