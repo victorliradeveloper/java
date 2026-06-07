@@ -27,6 +27,8 @@ public class Todo {
 
     private boolean completed;
 
+    private Priority priority;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

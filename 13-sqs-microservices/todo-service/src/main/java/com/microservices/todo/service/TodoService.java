@@ -6,6 +6,7 @@ import com.microservices.todo.dto.request.TodoUpdateDTO;
 import com.microservices.todo.dto.response.TodoResponseDTO;
 import com.microservices.todo.event.TodoEvent;
 import com.microservices.todo.exception.TodoNotFoundException;
+import com.microservices.todo.infrastructure.entity.Priority;
 import com.microservices.todo.infrastructure.entity.Todo;
 import com.microservices.todo.infrastructure.repository.TodoRepository;
 import com.microservices.todo.mapper.TodoMapper;
@@ -33,6 +34,9 @@ public class TodoService {
         LocalDateTime now = LocalDateTime.now();
         entity.setCreatedAt(now);
         entity.setUpdatedAt(now);
+        if (entity.getPriority() == null) {
+            entity.setPriority(Priority.MEDIUM);
+        }
         Todo todo = repository.save(entity);
         TodoResponseDTO response = mapper.toResponse(todo);
 
@@ -98,9 +102,9 @@ public class TodoService {
                 .orElseThrow(() -> new TodoNotFoundException(id));
     }
 
-    private record TodoSnapshot(String title, String description, boolean completed) {
+    private record TodoSnapshot(String title, String description, boolean completed, Priority priority) {
         static TodoSnapshot from(Todo todo) {
-            return new TodoSnapshot(todo.getTitle(), todo.getDescription(), todo.isCompleted());
+            return new TodoSnapshot(todo.getTitle(), todo.getDescription(), todo.isCompleted(), todo.getPriority());
         }
     }
 }

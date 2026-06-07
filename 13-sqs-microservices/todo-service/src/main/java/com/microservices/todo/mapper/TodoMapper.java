@@ -28,6 +28,7 @@ public interface TodoMapper {
     @Mapping(source = "title",       target = "title")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "completed",   target = "completed")
+    @Mapping(source = "priority",    target = "priority")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
