@@ -20,7 +20,7 @@ forma resiliente e segura.
 |-------------------------------------|--------------------------------------------|
 | Site da loja                        | `order-service`                            |
 | Operadora (Stripe etc.)             | `payment-service` (simulando ser externa)  |
-| "Analisando o pagamento…"           | `Thread.sleep(5s)` em `PaymentProcessor`   |
+| "Analisando o pagamento…"           | `Thread.sleep(30s)` em `PaymentProcessor`  |
 | Operadora avisando "aprovado!"      | `POST /webhooks/payment`                   |
 
 ## Por que webhook e não resposta síncrona

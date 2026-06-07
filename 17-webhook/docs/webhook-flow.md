@@ -30,13 +30,13 @@ OrderService.processPaymentWebhook      (idempotência + update da Order)
 
 `payment-service/src/main/java/com/webhook/payment/service/PaymentProcessor.java:29`
 
-Roda em thread separada (`@Async`). Dorme 5s simulando uma operadora externa,
+Roda em thread separada (`@Async`). Dorme 30s simulando uma operadora externa,
 aprova o pagamento e dispara o webhook.
 
 ```java
 @Async
 public void processAsync(UUID paymentId) {
-    Thread.sleep(PROCESSING_DELAY);                                  // 5s
+    Thread.sleep(PROCESSING_DELAY);                                  // 30s
     Payment approved = paymentService.updateStatus(paymentId, APPROVED);
     UUID eventId = UUID.randomUUID();
     orderServiceClient.notifyPayment(eventId, approved.orderId(), approved.status());
@@ -124,7 +124,7 @@ public void processPaymentWebhook(UUID eventId, UUID orderId, OrderStatus newSta
 
 | # | Função | Papel |
 |---|--------|-------|
-| 1 | `PaymentProcessor.processAsync` | Espera 5s, aprova, chama o client |
+| 1 | `PaymentProcessor.processAsync` | Espera 30s, aprova, chama o client |
 | 2 | `OrderServiceClient.notifyPayment` | `POST /webhooks/payment` com retry |
 | 3 | `WebhookSigningInterceptor.intercept` | Assina o body com HMAC-SHA256 |
 | 4 | `WebhookSignatureFilter.doFilterInternal` | Valida a assinatura (rejeita 401) |

@@ -34,7 +34,7 @@
    │       │                                                        │
    │       └──► dispara PaymentProcessor  @Async (task-1)           │
    │                  │                                             │
-   │                  │ sleep 5s → updateStatus(APPROVED)           │
+   │                  │ sleep 30s → updateStatus(APPROVED)          │
    │                  ▼                                             │
    │            client/OrderServiceClient                           │
    │              @Retryable(3x, backoff exp)                       │
@@ -81,6 +81,6 @@
 2. `OrderService.create` salva a `Order` como `PENDING` e chama `PaymentClient.createPayment` (síncrono).
 3. `PaymentController.create` recebe → `PaymentService.create` salva `Payment` como `PROCESSING` e dispara `PaymentProcessor.processAsync` em outra thread.
 4. Payment-service responde `202 Accepted` → order-service marca a `Order` como `PROCESSING` e devolve `201 Created` ao cliente.
-5. Em background, `PaymentProcessor` dorme 5s, marca o `Payment` como `APPROVED` e chama `OrderServiceClient.notifyPayment`.
+5. Em background, `PaymentProcessor` dorme 30s, marca o `Payment` como `APPROVED` e chama `OrderServiceClient.notifyPayment`.
 6. A request sai assinada (`X-Signature: sha256=<hmac>`) e bate em `POST /webhooks/payment` do order-service, com retry 3x e backoff exponencial em caso de falha.
 7. `WebhookSignatureFilter` valida o HMAC. Se OK, `PaymentWebhookController.receive` chama `OrderService.processPaymentWebhook`, que checa idempotência pelo `eventId`, atualiza a `Order` para `APPROVED` e grava o evento processado — tudo na mesma transação.

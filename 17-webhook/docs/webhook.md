@@ -36,14 +36,14 @@ consumidor precisa saber sem ficar fazendo polling.
 ## Como funciona neste projeto
 
 O projeto simula um fluxo `order → payment → webhook de confirmação`. O
-`payment-service` processa o pagamento de forma assíncrona (sleep de 5s
+`payment-service` processa o pagamento de forma assíncrona (sleep de 30s
 simulando uma operadora externa) e, quando termina, **chama de volta** o
 `order-service` via webhook para atualizar o status da `Order`.
 
 ```
 1. POST /orders                              (cliente → order-service)
 2. POST /payments         (síncrono)         (order-service → payment-service)
-3. processAsync (5s sleep, @Async)           (payment-service, em background)
+3. processAsync (30s sleep, @Async)          (payment-service, em background)
 4. POST /webhooks/payment (assinado + retry) (payment-service → order-service)
 5. order atualizada para APPROVED            (order-service)
 ```
@@ -54,7 +54,7 @@ Ver o diagrama completo em [architecture.md](architecture.md).
 
 | Arquivo | Papel |
 |---|---|
-| `service/PaymentProcessor.java` | Executa em `@Async`, dorme 5s, aprova o pagamento e dispara o webhook |
+| `service/PaymentProcessor.java` | Executa em `@Async`, dorme 30s, aprova o pagamento e dispara o webhook |
 | `client/OrderServiceClient.java` | `RestClient` com `@Retryable(3x, backoff exponencial)` e `@Recover` que loga a falha final |
 | `client/WebhookSigningInterceptor.java` | Interceptor que assina o corpo com HMAC-SHA256 e adiciona o header `X-Signature: sha256=<hex>` |
 | `client/dto/PaymentWebhookPayload.java` | Payload (`eventId`, `orderId`, `status`) |
@@ -129,7 +129,7 @@ POST /orders ──────► OrderService.create()
                                                           └─► PaymentService.create()
                                                                 └─► PaymentProcessor.processAsync()  [thread @Async]
                                                                        │
-                                                                       │   (sleep 5s)
+                                                                       │   (sleep 30s)
                                                                        │
                                                                        ▼
                                                                   approve payment
