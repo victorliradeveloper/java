@@ -61,6 +61,7 @@ public class BookService {
         // Cria o Review na memória e preenche com o comentário da requisição.
         ReviewModel reviewModel = new ReviewModel();
         reviewModel.setComment(bookRecordDto.reviewComment());
+        reviewModel.setRating(bookRecordDto.reviewRating());
 
         // Liga o Review ao Book (necessário para a chave estrangeira book_id na TB_REVIEW).
         reviewModel.setBook(book);
