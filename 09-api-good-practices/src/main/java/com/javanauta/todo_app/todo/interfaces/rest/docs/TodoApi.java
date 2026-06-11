@@ -28,11 +28,19 @@ import org.springframework.web.bind.annotation.RequestParam;
         content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
 @ApiResponse(responseCode = "403", description = "Authenticated user is not allowed to access this resource",
         content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+@ApiResponse(responseCode = "429", description = "Rate limit exceeded (100 requests/minute per user)",
+        content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+@ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+        content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
 public interface TodoApi {
 
     @Operation(summary = "Create a new todo")
     @ApiResponse(responseCode = "201", description = "Todo created successfully")
     @ApiResponse(responseCode = "400", description = "Invalid request body",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+    @ApiResponse(responseCode = "409", description = "Todo limit per user exceeded",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+    @ApiResponse(responseCode = "422", description = "Due date is in the past",
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     ResponseEntity<TodoResponseDTO> create(@RequestBody @Valid TodoRequestDTO request);
 
@@ -44,6 +52,8 @@ public interface TodoApi {
 
     @Operation(summary = "List todos with cursor-based pagination")
     @ApiResponse(responseCode = "200", description = "Cursor-paginated list of todos")
+    @ApiResponse(responseCode = "400", description = "Invalid cursor (must be non-negative)",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     ResponseEntity<CursorPageResponseDTO<TodoResponseDTO>> listWithCursor(
             @Parameter(description = "ID of the last item from the previous page")
             @RequestParam(required = false) Long cursor,
@@ -62,6 +72,10 @@ public interface TodoApi {
     @ApiResponse(responseCode = "400", description = "Invalid request body",
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     @ApiResponse(responseCode = "404", description = "Todo not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+    @ApiResponse(responseCode = "409", description = "Todo is already completed and cannot be modified",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+    @ApiResponse(responseCode = "422", description = "Due date is in the past",
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     ResponseEntity<TodoResponseDTO> update(
             @Parameter(description = "Todo ID") @PathVariable Long id,

@@ -14,6 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Auth", description = "Registration and authentication")
+@ApiResponse(responseCode = "429", description = "Rate limit exceeded (10 requests/minute per IP)",
+        content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+@ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+        content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
 public interface AuthApi {
 
     @Operation(summary = "Register a new user")
@@ -26,6 +30,8 @@ public interface AuthApi {
 
     @Operation(summary = "Authenticate and retrieve JWT token")
     @ApiResponse(responseCode = "200", description = "Authentication successful")
+    @ApiResponse(responseCode = "400", description = "Invalid request body",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     @ApiResponse(responseCode = "401", description = "Invalid email or password",
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid LoginRequestDTO request);
