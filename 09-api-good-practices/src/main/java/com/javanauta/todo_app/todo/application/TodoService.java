@@ -87,6 +87,11 @@ public class TodoService implements TodoUseCase {
         if (todo.isCompleted()) {
             throw new CompletedTodoCannotBeModifiedException(id);
         }
+
+        if(todoRepository.existsActiveByUserAndTitle(user, todo.getTitle())){
+            throw new DuplicateTodoException(todo.getTitle());
+        }
+
         validateDueDate(updates.getDueDate());
         todo.setTitle(updates.getTitle());
         todo.setDescription(updates.getDescription());
