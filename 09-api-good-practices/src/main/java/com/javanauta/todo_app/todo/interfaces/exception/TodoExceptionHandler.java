@@ -2,6 +2,7 @@ package com.javanauta.todo_app.todo.interfaces.exception;
 
 import com.javanauta.todo_app.shared.web.dto.ErrorResponseDTO;
 import com.javanauta.todo_app.todo.domain.exception.CompletedTodoCannotBeModifiedException;
+import com.javanauta.todo_app.todo.domain.exception.DuplicateTodoException;
 import com.javanauta.todo_app.todo.domain.exception.InvalidCursorException;
 import com.javanauta.todo_app.todo.domain.exception.PastDueDateException;
 import com.javanauta.todo_app.todo.domain.exception.TodoLimitExceededException;
@@ -44,6 +45,13 @@ public class TodoExceptionHandler {
     @ExceptionHandler(TodoLimitExceededException.class)
     public ResponseEntity<ErrorResponseDTO> handleTodoLimitExceeded(TodoLimitExceededException ex, HttpServletRequest request) {
         log.warn("Todo limit exceeded at {}: {}", request.getRequestURI(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponseDTO.of(HttpStatus.CONFLICT.value(), ex.getMessage(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(DuplicateTodoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleDuplicateTodo(DuplicateTodoException ex, HttpServletRequest request) {
+        log.warn("Duplicate todo at {}: {}", request.getRequestURI(), ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ErrorResponseDTO.of(HttpStatus.CONFLICT.value(), ex.getMessage(), request.getRequestURI()));
     }

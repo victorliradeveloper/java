@@ -38,7 +38,7 @@ public interface TodoApi {
     @ApiResponse(responseCode = "201", description = "Todo created successfully")
     @ApiResponse(responseCode = "400", description = "Invalid request body",
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
-    @ApiResponse(responseCode = "409", description = "Todo limit per user exceeded",
+    @ApiResponse(responseCode = "409", description = "Todo limit per user exceeded, or an active todo with the same title already exists",
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     @ApiResponse(responseCode = "422", description = "Due date is in the past",
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))

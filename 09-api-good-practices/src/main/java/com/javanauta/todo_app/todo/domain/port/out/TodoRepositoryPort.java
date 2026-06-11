@@ -21,5 +21,7 @@ public interface TodoRepositoryPort {
 
     long countByUser(User user);
 
+    boolean existsActiveByUserAndTitle(User user, String title);
+
     void delete(Todo todo);
 }

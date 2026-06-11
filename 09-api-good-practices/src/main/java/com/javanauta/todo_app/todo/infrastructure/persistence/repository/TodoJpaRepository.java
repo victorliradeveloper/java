@@ -18,4 +18,6 @@ public interface TodoJpaRepository extends JpaRepository<Todo, Long>, JpaSpecifi
     List<Todo> findWithCursor(@Param("user") User user, @Param("cursor") Long cursor, Pageable pageable);
 
     long countByUser(User user);
+
+    boolean existsByUserAndTitleIgnoreCaseAndCompletedFalse(User user, String title);
 }

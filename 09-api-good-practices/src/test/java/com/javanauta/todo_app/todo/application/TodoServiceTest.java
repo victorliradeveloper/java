@@ -1,6 +1,7 @@
 package com.javanauta.todo_app.todo.application;
 
 import com.javanauta.todo_app.todo.domain.exception.CompletedTodoCannotBeModifiedException;
+import com.javanauta.todo_app.todo.domain.exception.DuplicateTodoException;
 import com.javanauta.todo_app.todo.domain.exception.InvalidCursorException;
 import com.javanauta.todo_app.todo.domain.exception.PastDueDateException;
 import com.javanauta.todo_app.todo.domain.exception.TodoLimitExceededException;
@@ -97,6 +98,18 @@ class TodoServiceTest {
                 .isInstanceOf(TodoLimitExceededException.class)
                 .hasMessageContaining(String.valueOf(MAX_TODOS_PER_USER));
 
+        verify(todoRepository, never()).save(any());
+    }
+
+    @Test
+    void create_whenActiveDuplicateTitle_shouldThrowDuplicateTodoException() {
+        when(todoRepository.existsActiveByUserAndTitle(mockUser, "Study Java")).thenReturn(true);
+
+        assertThatThrownBy(() -> todoService.create(mockUser, todo))
+                .isInstanceOf(DuplicateTodoException.class)
+                .hasMessageContaining("Study Java");
+
+        verify(todoRepository, never()).countByUser(any());
         verify(todoRepository, never()).save(any());
     }
 

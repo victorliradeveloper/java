@@ -1,6 +1,7 @@
 package com.javanauta.todo_app.todo.application;
 
 import com.javanauta.todo_app.todo.domain.exception.CompletedTodoCannotBeModifiedException;
+import com.javanauta.todo_app.todo.domain.exception.DuplicateTodoException;
 import com.javanauta.todo_app.todo.domain.exception.InvalidCursorException;
 import com.javanauta.todo_app.todo.domain.exception.PastDueDateException;
 import com.javanauta.todo_app.todo.domain.exception.TodoLimitExceededException;
@@ -39,6 +40,10 @@ public class TodoService implements TodoUseCase {
     @Override
     public Todo create(User user, Todo todo) {
         validateDueDate(todo.getDueDate());
+        if (todoRepository.existsActiveByUserAndTitle(user, todo.getTitle())) {
+            throw new DuplicateTodoException(todo.getTitle());
+        }
+
         if (todoRepository.countByUser(user) >= maxTodosPerUser) {
             throw new TodoLimitExceededException(maxTodosPerUser);
         }

@@ -46,6 +46,11 @@ public class TodoRepositoryAdapter implements TodoRepositoryPort {
     }
 
     @Override
+    public boolean existsActiveByUserAndTitle(User user, String title) {
+        return jpaRepository.existsByUserAndTitleIgnoreCaseAndCompletedFalse(user, title);
+    }
+
+    @Override
     public void delete(Todo todo) {
         jpaRepository.delete(todo);
     }
