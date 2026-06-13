@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -69,14 +70,24 @@ class TodoServiceTest {
 
     @Test
     void create_shouldReturnCreatedTodo() {
-        when(todoRepository.save(any(Todo.class))).thenReturn(todo);
+        when(todoRepository.saveAndFlush(any(Todo.class))).thenReturn(todo);
 
         Todo result = todoService.create(mockUser, todo);
 
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getTitle()).isEqualTo("Study Java");
         assertThat(result.isCompleted()).isFalse();
-        verify(todoRepository, times(1)).save(any(Todo.class));
+        verify(todoRepository, times(1)).saveAndFlush(any(Todo.class));
+    }
+
+    @Test
+    void create_whenConcurrentDuplicate_shouldTranslateToDuplicateTodoException() {
+        when(todoRepository.saveAndFlush(any(Todo.class)))
+                .thenThrow(new DataIntegrityViolationException("uq_todo_user_title_active"));
+
+        assertThatThrownBy(() -> todoService.create(mockUser, todo))
+                .isInstanceOf(DuplicateTodoException.class)
+                .hasMessageContaining("Study Java");
     }
 
     @Test
@@ -244,12 +255,24 @@ class TodoServiceTest {
     void update_whenExists_shouldReturnUpdatedTodo() {
         Todo updates = Todo.builder().title("New title").description("New description").build();
         when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
-        when(todoRepository.save(any(Todo.class))).thenReturn(todo);
+        when(todoRepository.saveAndFlush(any(Todo.class))).thenReturn(todo);
 
         Todo result = todoService.update(mockUser, 1L, updates);
 
         assertThat(result).isNotNull();
-        verify(todoRepository).save(todo);
+        verify(todoRepository).saveAndFlush(todo);
+    }
+
+    @Test
+    void update_whenDuplicateTitle_shouldTranslateToDuplicateTodoException() {
+        Todo updates = Todo.builder().title("New title").build();
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+        when(todoRepository.saveAndFlush(any(Todo.class)))
+                .thenThrow(new DataIntegrityViolationException("uq_todo_user_title_active"));
+
+        assertThatThrownBy(() -> todoService.update(mockUser, 1L, updates))
+                .isInstanceOf(DuplicateTodoException.class)
+                .hasMessageContaining("New title");
     }
 
     @Test

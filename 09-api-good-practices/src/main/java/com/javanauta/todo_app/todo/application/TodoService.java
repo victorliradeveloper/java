@@ -13,6 +13,7 @@ import com.javanauta.todo_app.auth.domain.model.User;
 import com.javanauta.todo_app.todo.domain.port.in.TodoUseCase;
 import com.javanauta.todo_app.todo.domain.port.out.TodoRepositoryPort;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -48,7 +49,14 @@ public class TodoService implements TodoUseCase {
             throw new TodoLimitExceededException(maxTodosPerUser);
         }
         todo.setUser(user);
-        return todoRepository.save(todo);
+        try {
+            // saveAndFlush forces the INSERT (and the unique-index check) to run here,
+            // so a concurrent duplicate surfaces as DataIntegrityViolationException inside
+            // this try instead of at commit time. The check above stays as a fast path.
+            return todoRepository.saveAndFlush(todo);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateTodoException(todo.getTitle());
+        }
     }
 
     @Transactional(readOnly = true)
@@ -88,15 +96,19 @@ public class TodoService implements TodoUseCase {
             throw new CompletedTodoCannotBeModifiedException(id);
         }
 
-        if(todoRepository.existsActiveByUserAndTitle(user, todo.getTitle())){
-            throw new DuplicateTodoException(todo.getTitle());
-        }
-
         validateDueDate(updates.getDueDate());
         todo.setTitle(updates.getTitle());
         todo.setDescription(updates.getDescription());
         todo.setDueDate(updates.getDueDate());
-        return todoRepository.save(todo);
+        try {
+            // Rely on the unique index as the source of truth for duplicates: it
+            // correctly ignores this same row (only a collision with ANOTHER active
+            // todo throws), unlike a pre-check on the title which would always match
+            // the record being updated.
+            return todoRepository.saveAndFlush(todo);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateTodoException(updates.getTitle());
+        }
     }
 
     @Transactional

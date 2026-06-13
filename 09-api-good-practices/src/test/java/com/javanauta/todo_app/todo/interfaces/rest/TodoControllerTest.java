@@ -1,12 +1,18 @@
 package com.javanauta.todo_app.todo.interfaces.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.javanauta.todo_app.todo.domain.exception.CompletedTodoCannotBeModifiedException;
+import com.javanauta.todo_app.todo.domain.exception.DuplicateTodoException;
+import com.javanauta.todo_app.todo.domain.exception.InvalidCursorException;
+import com.javanauta.todo_app.todo.domain.exception.PastDueDateException;
+import com.javanauta.todo_app.todo.domain.exception.TodoLimitExceededException;
 import com.javanauta.todo_app.todo.domain.exception.TodoNotFoundException;
 import com.javanauta.todo_app.todo.domain.model.Todo;
 import com.javanauta.todo_app.todo.domain.model.TodoPage;
 import com.javanauta.todo_app.auth.domain.model.User;
 import com.javanauta.todo_app.todo.domain.port.in.TodoUseCase;
 import com.javanauta.todo_app.auth.infrastructure.security.JwtService;
+import com.javanauta.todo_app.todo.interfaces.dto.request.TodoFilterDTO;
 import com.javanauta.todo_app.todo.interfaces.dto.request.TodoRequestDTO;
 import com.javanauta.todo_app.shared.web.dto.CursorPageResponseDTO;
 import com.javanauta.todo_app.shared.web.dto.PagedResponseDTO;
@@ -15,6 +21,7 @@ import com.javanauta.todo_app.todo.interfaces.mapper.TodoMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
@@ -32,6 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -128,6 +136,42 @@ class TodoControllerTest {
         verify(todoUseCase, never()).create(any(), any());
     }
 
+    @Test
+    void create_whenDuplicateTitle_shouldReturn409() throws Exception {
+        when(todoMapper.toEntity(any(TodoRequestDTO.class))).thenReturn(todo);
+        when(todoUseCase.create(any(User.class), any(Todo.class)))
+                .thenThrow(new DuplicateTodoException("Study Java"));
+
+        mockMvc.perform(post("/api/v1/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void create_whenLimitExceeded_shouldReturn409() throws Exception {
+        when(todoMapper.toEntity(any(TodoRequestDTO.class))).thenReturn(todo);
+        when(todoUseCase.create(any(User.class), any(Todo.class)))
+                .thenThrow(new TodoLimitExceededException(100));
+
+        mockMvc.perform(post("/api/v1/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void create_whenDueDateInPast_shouldReturn422() throws Exception {
+        when(todoMapper.toEntity(any(TodoRequestDTO.class))).thenReturn(todo);
+        when(todoUseCase.create(any(User.class), any(Todo.class)))
+                .thenThrow(new PastDueDateException(LocalDateTime.now().minusDays(1)));
+
+        mockMvc.perform(post("/api/v1/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
     // -------------------------------------------------------------------------
     // GET /api/v1/todos
     // -------------------------------------------------------------------------
@@ -146,28 +190,52 @@ class TodoControllerTest {
     }
 
     @Test
-    void list_withTitleFilter_shouldReturnFilteredItems() throws Exception {
+    void list_withTitleFilter_shouldBindTitleAndPassToService() throws Exception {
         Page<Todo> page = new PageImpl<>(List.of(todo));
         PagedResponseDTO<TodoResponseDTO> paged = new PagedResponseDTO<>(List.of(response), 0, 20, 1L, 1, true);
         when(todoUseCase.findAll(any(User.class), any(), any(Pageable.class))).thenReturn(page);
         when(todoMapper.toPagedResponse(any())).thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/todos").param("title", "Study"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].title").value("Study Java"));
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<TodoFilterDTO> filterCaptor = ArgumentCaptor.forClass(TodoFilterDTO.class);
+        verify(todoMapper).toFilter(filterCaptor.capture());
+        assertThat(filterCaptor.getValue().title()).isEqualTo("Study");
+        assertThat(filterCaptor.getValue().completed()).isNull();
     }
 
     @Test
-    void list_withCompletedFilter_shouldReturnFilteredItems() throws Exception {
-        TodoResponseDTO completed = new TodoResponseDTO(2L, "Done", null, true, LocalDateTime.now(), null);
+    void list_withCompletedFilter_shouldBindCompletedAndPassToService() throws Exception {
         Page<Todo> page = new PageImpl<>(List.of(todo));
-        PagedResponseDTO<TodoResponseDTO> paged = new PagedResponseDTO<>(List.of(completed), 0, 20, 1L, 1, true);
+        PagedResponseDTO<TodoResponseDTO> paged = new PagedResponseDTO<>(List.of(response), 0, 20, 1L, 1, true);
         when(todoUseCase.findAll(any(User.class), any(), any(Pageable.class))).thenReturn(page);
         when(todoMapper.toPagedResponse(any())).thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/todos").param("completed", "true"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].completed").value(true));
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<TodoFilterDTO> filterCaptor = ArgumentCaptor.forClass(TodoFilterDTO.class);
+        verify(todoMapper).toFilter(filterCaptor.capture());
+        assertThat(filterCaptor.getValue().completed()).isTrue();
+    }
+
+    @Test
+    void list_withDateRangeFilter_shouldBindDueDateBounds() throws Exception {
+        Page<Todo> page = new PageImpl<>(List.of(todo));
+        PagedResponseDTO<TodoResponseDTO> paged = new PagedResponseDTO<>(List.of(response), 0, 20, 1L, 1, true);
+        when(todoUseCase.findAll(any(User.class), any(), any(Pageable.class))).thenReturn(page);
+        when(todoMapper.toPagedResponse(any())).thenReturn(paged);
+
+        mockMvc.perform(get("/api/v1/todos")
+                        .param("dueDateFrom", "2026-05-01T00:00:00")
+                        .param("dueDateTo", "2026-05-31T23:59:59"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<TodoFilterDTO> filterCaptor = ArgumentCaptor.forClass(TodoFilterDTO.class);
+        verify(todoMapper).toFilter(filterCaptor.capture());
+        assertThat(filterCaptor.getValue().dueDateFrom()).isEqualTo(LocalDateTime.parse("2026-05-01T00:00:00"));
+        assertThat(filterCaptor.getValue().dueDateTo()).isEqualTo(LocalDateTime.parse("2026-05-31T23:59:59"));
     }
 
     // -------------------------------------------------------------------------
@@ -198,6 +266,15 @@ class TodoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nextCursor").value(10))
                 .andExpect(jsonPath("$.hasNext").value(true));
+    }
+
+    @Test
+    void listWithCursor_withNegativeCursor_shouldReturn400() throws Exception {
+        when(todoUseCase.listWithCursor(any(User.class), eq(-1L), eq(20)))
+                .thenThrow(new InvalidCursorException(-1L));
+
+        mockMvc.perform(get("/api/v1/todos/cursor").param("cursor", "-1"))
+                .andExpect(status().isBadRequest());
     }
 
     // -------------------------------------------------------------------------
@@ -249,6 +326,30 @@ class TodoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void update_whenAlreadyCompleted_shouldReturn409() throws Exception {
+        when(todoMapper.toEntity(any(TodoRequestDTO.class))).thenReturn(todo);
+        when(todoUseCase.update(any(User.class), eq(1L), any(Todo.class)))
+                .thenThrow(new CompletedTodoCannotBeModifiedException(1L));
+
+        mockMvc.perform(put("/api/v1/todos/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void update_whenDuplicateTitle_shouldReturn409() throws Exception {
+        when(todoMapper.toEntity(any(TodoRequestDTO.class))).thenReturn(todo);
+        when(todoUseCase.update(any(User.class), eq(1L), any(Todo.class)))
+                .thenThrow(new DuplicateTodoException("Study Java"));
+
+        mockMvc.perform(put("/api/v1/todos/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
     }
 
     // -------------------------------------------------------------------------

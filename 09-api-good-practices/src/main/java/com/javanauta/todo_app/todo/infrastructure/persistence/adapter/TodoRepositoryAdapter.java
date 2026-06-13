@@ -26,6 +26,11 @@ public class TodoRepositoryAdapter implements TodoRepositoryPort {
     }
 
     @Override
+    public Todo saveAndFlush(Todo todo) {
+        return jpaRepository.saveAndFlush(todo);
+    }
+
+    @Override
     public Optional<Todo> findById(Long id) {
         return jpaRepository.findById(id);
     }

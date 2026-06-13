@@ -13,6 +13,8 @@ public interface TodoRepositoryPort {
 
     Todo save(Todo todo);
 
+    Todo saveAndFlush(Todo todo);
+
     Optional<Todo> findById(Long id);
 
     Page<Todo> findAll(TodoFilter filter, User user, Pageable pageable);
