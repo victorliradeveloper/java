@@ -18,8 +18,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TodoController {
 
-    // Fingerprint identifica a operacao no hash da idempotencia: previne que
-    // a mesma key seja reusada acidentalmente em endpoints diferentes.
     private static final String CREATE_FINGERPRINT = "POST /todos";
 
     private final TodoService service;

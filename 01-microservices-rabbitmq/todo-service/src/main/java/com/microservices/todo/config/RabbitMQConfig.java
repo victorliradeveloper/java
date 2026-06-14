@@ -1,5 +1,8 @@
 package com.microservices.todo.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -69,9 +72,18 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(deletedQueue()).to(todoExchange()).with(ROUTING_DELETED);
     }
 
+    // O converter default registra o JavaTimeModule mas mantem
+    // WRITE_DATES_AS_TIMESTAMPS=true, serializando LocalDateTime como array
+    // ([2026,6,13,10,15,30,...]) — formato acoplado ao Java e fragil pra
+    // consumers poliglotas. Desligamos esse flag pra emitir ISO-8601
+    // ("2026-06-13T10:15:30"), legivel e interoperavel. O contrato Pact
+    // (TodoEventProviderPactTest) trava esse formato.
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+        ObjectMapper objectMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return new Jackson2JsonMessageConverter(objectMapper);
     }
 
     @Bean

@@ -20,6 +20,7 @@
         <spring-cloud.version>2023.0.3</spring-cloud.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
+        <pact.version>4.6.17</pact.version>
     </properties>
 
     <dependencyManagement>
@@ -85,6 +86,15 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Pact (provider side): le os contratos gerados pelos consumers (em
+             ../pacts) e verifica que o TodoEvent que ESTE servico publica bate
+             com o que cada consumer espera receber. -->
+        <dependency>
+            <groupId>au.com.dius.pact.provider</groupId>
+            <artifactId>junit5</artifactId>
+            <version>${pact.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
