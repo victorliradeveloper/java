@@ -38,7 +38,7 @@ mvn test
 ## Rodar só os testes Pact (contract testing)
 
 O fluxo do Pact tem **duas etapas, e a ordem importa**: o consumer **gera** o
-contrato, o provider **verifica** contra esse arquivo. Veja [pact.md](./pact.md)
+contrato, o provider **verifica** contra esse arquivo. Veja [pact.md](pact.md)
 para o detalhe do ciclo.
 
 ### 1. Consumer — gera o contrato
