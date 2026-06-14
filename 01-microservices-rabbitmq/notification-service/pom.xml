@@ -19,6 +19,7 @@
         <java.version>21</java.version>
         <spring-cloud.version>2023.0.3</spring-cloud.version>
         <resilience4j.version>2.3.0</resilience4j.version>
+        <pact.version>4.6.17</pact.version>
     </properties>
 
     <dependencyManagement>
@@ -126,6 +127,15 @@
         <dependency>
             <groupId>org.springframework.amqp</groupId>
             <artifactId>spring-rabbit-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Pact (consumer side): gera o contrato de mensagem que descreve o
+             TodoEvent que ESTE servico espera receber do todo-service. O arquivo
+             pact.json resultante eh verificado pelo provider (todo-service). -->
+        <dependency>
+            <groupId>au.com.dius.pact.consumer</groupId>
+            <artifactId>junit5</artifactId>
+            <version>${pact.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
