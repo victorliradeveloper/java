@@ -10,3 +10,7 @@ GRANT ALL PRIVILEGES ON DATABASE notificationdb TO todo_user;
 
 CREATE DATABASE auditdb OWNER todo_user;
 GRANT ALL PRIVILEGES ON DATABASE auditdb TO todo_user;
+
+-- Database do Pact Broker. O broker cria/migra seu proprio schema no boot.
+CREATE DATABASE pactbrokerdb OWNER todo_user;
+GRANT ALL PRIVILEGES ON DATABASE pactbrokerdb TO todo_user;

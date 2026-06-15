@@ -54,6 +54,37 @@ services:
       timeout: 5s
       retries: 5
 
+  pact-broker:
+    image: pactfoundation/pact-broker:latest
+    container_name: pact-broker
+    ports:
+      - "9292:9292"
+    environment:
+      # Reaproveita o Postgres do projeto (database pactbrokerdb, criado pelo
+      # init-databases.sql). O broker roda suas proprias migrations no boot.
+      PACT_BROKER_DATABASE_ADAPTER: postgres
+      PACT_BROKER_DATABASE_HOST: postgres
+      PACT_BROKER_DATABASE_PORT: "5432"
+      PACT_BROKER_DATABASE_NAME: pactbrokerdb
+      PACT_BROKER_DATABASE_USERNAME: todo_user
+      PACT_BROKER_DATABASE_PASSWORD: todo_pass
+      PACT_BROKER_PORT: "9292"
+      # Basic auth — espelha o que voce teria em producao. Publicar (write)
+      # exige credencial; leitura tambem. Ajuste/externalize via .env se quiser.
+      PACT_BROKER_BASIC_AUTH_USERNAME: pact
+      PACT_BROKER_BASIC_AUTH_PASSWORD: pact
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9292/diagnostic/status/heartbeat || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
   eureka-server:
     build: ./eureka-server
     container_name: eureka-server

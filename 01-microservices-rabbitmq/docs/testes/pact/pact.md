@@ -24,7 +24,7 @@ Os dois testes **nunca rodam juntos** e **nenhum precisa de RabbitMQ no ar**. O 
 
 ## O problema que o Pact resolve
 
-No projeto, o `todo-service` publica eventos `TodoEvent` e o `notification-service` os consome (ver [fluxo-das-mensagens](../rabbitmq/fluxo-das-mensagens.md)). Como garantir que os dois continuam "se entendendo"?
+No projeto, o `todo-service` publica eventos `TodoEvent` e o `notification-service` os consome (ver [fluxo-das-mensagens](../../rabbitmq/fluxo-das-mensagens.md)). Como garantir que os dois continuam "se entendendo"?
 
 | Alternativa | Problema |
 |---|---|
@@ -32,7 +32,7 @@ No projeto, o `todo-service` publica eventos `TodoEvent` e o `notification-servi
 | **Mockar o outro lado na mão** | O mock pode divergir do comportamento real sem ninguém notar — exatamente o bug que se queria evitar. |
 | **Contract testing (Pact)** | Cada lado testa isolado contra um contrato versionado. Rápido e pega divergência de schema **antes do deploy**. |
 
-É o mesmo tipo de divergência cross-service que o `__TypeId__` mapping (ver [consumer](../rabbitmq/consumer.md)) tenta resolver — só que aqui pegamos no teste, não em runtime.
+É o mesmo tipo de divergência cross-service que o `__TypeId__` mapping (ver [consumer](../../rabbitmq/consumer.md)) tenta resolver — só que aqui pegamos no teste, não em runtime.
 
 ---
 
@@ -168,7 +168,7 @@ class TodoEventProviderPactTest {
 Peças importantes:
 
 - **`@PactVerifyProvider("a todo created event")`** — o texto precisa ser **idêntico** ao `expectsToReceive(...)` do consumer. É assim que o Pact liga "o que o consumer pediu" com "o que o provider entrega".
-- **Serialização fiel à produção** — o body é gerado pelo próprio `RabbitMQConfig.messageConverter()`, o mesmo `Jackson2JsonMessageConverter` que o `OutboxPublisher` usa em runtime (ver [publisher](../rabbitmq/publisher.md)). Assim o contrato verifica a serialização **de verdade**, não um JSON montado à mão que poderia mentir.
+- **Serialização fiel à produção** — o body é gerado pelo próprio `RabbitMQConfig.messageConverter()`, o mesmo `Jackson2JsonMessageConverter` que o `OutboxPublisher` usa em runtime (ver [publisher](../../rabbitmq/publisher.md)). Assim o contrato verifica a serialização **de verdade**, não um JSON montado à mão que poderia mentir.
 - **`MessageTestTarget`** — informa que o alvo é uma mensagem. (Atenção: nesta versão do Pact-JVM a classe é `MessageTestTarget`, não `AmqpTestTarget`.)
 
 ---

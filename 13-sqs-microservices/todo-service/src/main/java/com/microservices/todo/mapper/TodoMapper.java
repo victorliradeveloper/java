@@ -1,5 +1,6 @@
 package com.microservices.todo.mapper;
 
+import com.microservices.todo.dto.request.TodoReplaceDTO;
 import com.microservices.todo.dto.request.TodoRequestDTO;
 import com.microservices.todo.dto.request.TodoUpdateDTO;
 import com.microservices.todo.dto.response.TodoResponseDTO;
@@ -21,6 +22,9 @@ public interface TodoMapper {
 
     TodoResponseDTO toResponse(Todo todo);
 
+    // PATCH = merge parcial. NullValuePropertyMappingStrategy.IGNORE faz campos
+    // null no DTO NAO sobrescreverem o estado atual — manda so o que muda.
+    //
     // Os tres source/target abaixo sao redundantes — MapStruct ja casa
     // por nome quando source e target tem o mesmo identificador. O certo
     // seria omitir, mantidos aqui apenas como exemplo didatico.
@@ -32,5 +36,17 @@ public interface TodoMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateEntity(TodoUpdateDTO dto, @MappingTarget Todo todo);
+    void patchEntity(TodoUpdateDTO dto, @MappingTarget Todo todo);
+
+    // PUT = substituicao total. SEM @BeanMapping IGNORE: usa a estrategia default
+    // do MapStruct (SET_TO_NULL), entao campos ausentes SOBRESCREVEM o estado —
+    // description omitida vira null (limpa). completed e priority caem nos defaults
+    // via defaultValue (false / MEDIUM), espelhando o create. title e @NotBlank no
+    // TodoReplaceDTO, entao nunca chega null aqui.
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "completed", source = "completed", defaultValue = "false")
+    @Mapping(target = "priority", source = "priority", defaultValue = "MEDIUM")
+    void replaceEntity(TodoReplaceDTO dto, @MappingTarget Todo todo);
 }
