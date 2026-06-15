@@ -16,10 +16,11 @@ Todos os endpoints vivem em [`TodoController`](../../todo-service/src/main/java/
 
 ## Portas
 
-| Caminho | URL base |
-|---|---|
-| Via API Gateway (rate limiter Redis) | `http://localhost:8080/todos` |
-| Direto no todo-service | `http://localhost:8081/todos` |
+| Caminho | URL base | Observação |
+|---|---|---|
+| Via API Gateway (rate limiter Redis) — **docker-compose** | `http://localhost:8090/todos` | compose mapeia `8090:8080` |
+| Via API Gateway — **gateway standalone (`mvn`)** | `http://localhost:8080/todos` | `server.port: 8080` |
+| Direto no todo-service | `http://localhost:8081/todos` | mesma porta em ambos os modos |
 
 ## Onde os status codes são definidos
 
