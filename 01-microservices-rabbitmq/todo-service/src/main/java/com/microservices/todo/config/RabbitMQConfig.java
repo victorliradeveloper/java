@@ -90,6 +90,9 @@ public class RabbitMQConfig {
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(messageConverter());
+        // Injeta o trace context corrente nos headers da mensagem (traceparent),
+        // permitindo que o consumer de join no mesmo trace. Default e' false.
+        template.setObservationEnabled(true);
         return template;
     }
 }

@@ -30,6 +30,7 @@ public class OutboxService {
 
     private final OutboxEventRepository repository;
     private final ObjectMapper objectMapper;
+    private final OutboxTracePropagator tracePropagator;
 
     public void record(String exchange,
                        String routingKey,
@@ -47,6 +48,8 @@ public class OutboxService {
                 .payload(serialize(payload))
                 .createdAt(LocalDateTime.now())
                 .attempts(0)
+                // Captura o trace da request atual pra restaurar no publish assincrono.
+                .traceParent(tracePropagator.capture())
                 .build();
         log.info("[OUTBOX] enfileirado id={} aggregateId={} aggregateType={} eventType={} routingKey={}",
                 event.getId(), aggregateId, aggregateType, eventType, routingKey);

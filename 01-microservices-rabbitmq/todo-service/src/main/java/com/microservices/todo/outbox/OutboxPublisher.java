@@ -30,6 +30,7 @@ public class OutboxPublisher {
     private final ObjectMapper objectMapper;
     private final OutboxProperties properties;
     private final BackoffPolicy backoffPolicy;
+    private final OutboxTracePropagator tracePropagator;
 
     // Self-injection pra que publishOne(@Transactional REQUIRES_NEW) passe pelo
     // proxy do Spring — chamada direta this.publishOne(...) ignoraria a TX nova.
@@ -44,12 +45,14 @@ public class OutboxPublisher {
                            ObjectMapper objectMapper,
                            OutboxProperties properties,
                            BackoffPolicy backoffPolicy,
+                           OutboxTracePropagator tracePropagator,
                            @Lazy OutboxPublisher self) {
         this.repository = repository;
         this.rabbitTemplate = rabbitTemplate;
         this.objectMapper = objectMapper;
         this.properties = properties;
         this.backoffPolicy = backoffPolicy;
+        this.tracePropagator = tracePropagator;
         this.self = self;
     }
 
@@ -82,6 +85,13 @@ public class OutboxPublisher {
     // (publishedAt OU attempts++) eh persistido.
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishOne(OutboxEvent event) {
+        // Reabre o trace da request original (persistido no enfileiramento) pra que
+        // estes logs e os headers AMQP propagados ao consumer fiquem sob o mesmo
+        // traceId — costurando HTTP -> outbox -> AMQP -> consumer.
+        tracePropagator.restore(event.getTraceParent(), () -> doPublish(event));
+    }
+
+    private void doPublish(OutboxEvent event) {
         try {
             TodoEvent payload = objectMapper.readValue(event.getPayload(), TodoEvent.class);
             // O messageId AMQP eh setado com o outbox.id pra que o consumer possa

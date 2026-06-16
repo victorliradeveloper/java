@@ -35,9 +35,9 @@ public class TodoService {
      */
     @Transactional
     public TodoResponseDTO create(TodoRequestDTO dto) {
-        log.info("create dto={}", dto);
+        log.debug("[TODO] criando title='{}'", dto.title());
         Todo todo = repository.save(mapper.toEntity(dto));
-        log.info("[TODO] persistido id={} title='{}' createdAt={}",
+        log.info("[TODO] criado id={} title='{}' createdAt={}",
                 todo.getId(), todo.getTitle(), todo.getCreatedAt());
         TodoResponseDTO response = mapper.toResponse(todo);
         outboxService.record(
@@ -66,6 +66,7 @@ public class TodoService {
         Todo todo = getOrThrow(id);
         mapper.updateEntity(dto, todo);
         TodoResponseDTO response = mapper.toResponse(repository.save(todo));
+        log.info("[TODO] atualizado id={} title='{}'", response.id(), response.title());
         outboxService.record(
                 RabbitMQConfig.EXCHANGE,
                 RabbitMQConfig.ROUTING_UPDATED,
@@ -81,6 +82,7 @@ public class TodoService {
     public void delete(String id) {
         Todo todo = getOrThrow(id);
         repository.delete(todo);
+        log.info("[TODO] removido id={}", todo.getId());
         outboxService.record(
                 RabbitMQConfig.EXCHANGE,
                 RabbitMQConfig.ROUTING_DELETED,

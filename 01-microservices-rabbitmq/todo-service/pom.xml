@@ -60,6 +60,19 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
+        <!-- Tracing: gera traceId/spanId, injeta no MDC (correlacao de logs) e
+             propaga o contexto via headers HTTP e AMQP. Sem reporter (Zipkin/OTLP)
+             porque so' queremos correlacao de logs, nao export pra um backend. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+        </dependency>
+        <!-- Logging estruturado em JSON (perfil prod) pra ingestao em ELK/Loki. -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>7.4</version>
+        </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>

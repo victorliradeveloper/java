@@ -29,6 +29,18 @@ spring:
 server:
   port: 8081
 
+management:
+  tracing:
+    # W3C (traceparent) em vez do B3 default do Brave: padrao moderno e o formato
+    # que persistimos no outbox (coluna trace_parent) pra costurar o trace atraves
+    # da publicacao assincrona. Consumers devem usar o mesmo type pra dar join.
+    propagation:
+      type: w3c
+    sampling:
+      # 1.0 = todo request gera trace. Sem reporter o custo e' so' o traceId no MDC;
+      # garante que toda linha de log tenha traceId, nao so' 10% (default).
+      probability: 1.0
+
 eureka:
   client:
     service-url:

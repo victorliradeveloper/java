@@ -57,6 +57,13 @@ public class OutboxEvent {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    // W3C traceparent capturado no momento do enfileiramento. Restaurado pelo
+    // publisher pra que a publicacao assincrona herde o trace da request original
+    // (HTTP -> outbox -> AMQP -> consumer no mesmo traceId). null = enfileirado
+    // sem contexto de trace ativo.
+    @Column(name = "trace_parent", length = 64)
+    private String traceParent;
+
     // null = pendente. Indexado em conjunto com created_at pra acelerar o claim.
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
