@@ -20,7 +20,7 @@ services:
   app:
     build: .
     ports:
-      - "8080:8080"
+      - "8082:8082"
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://root:mongo123@mongodb:27017/bookstore-mongo?authSource=admin
     depends_on:
