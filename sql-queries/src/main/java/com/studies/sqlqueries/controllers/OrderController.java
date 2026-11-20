@@ -1,6 +1,7 @@
 package com.studies.sqlqueries.controllers;
 
 import com.studies.sqlqueries.entities.Order;
+import com.studies.sqlqueries.entities.OrderItem;
 import com.studies.sqlqueries.enums.OrderStatus;
 import com.studies.sqlqueries.services.OrderService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -124,12 +125,50 @@ public class OrderController {
         return orderService.findLargeActiveOrders(minTotal, minItems);
     }
 
-    // ==================== UPDATE ====================
+    // ==================== BASIC UPDATE ====================
 
+    // PATCH: @Modifying @Query → UPDATE orders SET status=?, updated_at=? WHERE id=?
     @PatchMapping("/{id}/status")
     public ResponseEntity<Order> updateStatus(
             @PathVariable Long id,
             @RequestParam OrderStatus status) {
         return ResponseEntity.ok(orderService.updateStatus(id, status));
+    }
+
+    // ==================== MEDIUM UPDATE ====================
+
+    // POST: carrega Order, adiciona ao List<OrderItem>, recalcula total e salva
+    // JPA: INSERT INTO order_items + UPDATE orders SET total_amount=?
+    @PostMapping("/{id}/items")
+    public ResponseEntity<Order> addItem(
+            @PathVariable Long id,
+            @RequestBody OrderItem item) {
+        return ResponseEntity.ok(orderService.addItem(id, item));
+    }
+
+    // DELETE: carrega Order, remove item, subtrai do total e salva
+    // JPA: recria order_items + UPDATE orders SET total_amount=?
+    @DeleteMapping("/{id}/items/{productId}")
+    public ResponseEntity<Order> removeItem(
+            @PathVariable Long id,
+            @PathVariable Long productId) {
+        return ResponseEntity.ok(orderService.removeItem(id, productId));
+    }
+
+    // ==================== ADVANCED UPDATE ====================
+
+    // PATCH bulk: @Modifying @Query → UPDATE N pedidos em uma query SQL
+    // Retorna a quantidade de linhas afetadas
+    @PatchMapping("/bulk-cancel")
+    public ResponseEntity<Integer> bulkCancelPendingOrders(
+            @RequestParam(defaultValue = "30") int olderThanDays) {
+        return ResponseEntity.ok(orderService.bulkCancelPendingOrders(olderThanDays));
+    }
+
+    // PATCH: @Modifying nativeQuery com subquery no SET — recalcula total direto no banco
+    // Equivalente ao AggregationUpdate (pipeline update) do MongoDB
+    @PatchMapping("/{id}/recalculate")
+    public ResponseEntity<Order> recalculateTotal(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.recalculateTotal(id));
     }
 }

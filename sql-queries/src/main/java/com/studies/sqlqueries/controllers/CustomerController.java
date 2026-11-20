@@ -1,5 +1,6 @@
 package com.studies.sqlqueries.controllers;
 
+import com.studies.sqlqueries.entities.Address;
 import com.studies.sqlqueries.entities.Customer;
 import com.studies.sqlqueries.enums.CustomerStatus;
 import com.studies.sqlqueries.services.CustomerService;
@@ -103,5 +104,77 @@ public class CustomerController {
     public List<Customer> findHighValueBrazilianCustomers(
             @RequestParam(defaultValue = "500") int minPoints) {
         return customerService.findHighValueBrazilianCustomers(minPoints);
+    }
+
+    // ==================== BASIC UPDATE ====================
+
+    // PUT: substitui todos os campos — JPA: UPDATE customers SET ... WHERE id=?
+    @PutMapping("/{id}")
+    public ResponseEntity<Customer> fullReplace(
+            @PathVariable Long id,
+            @RequestBody Customer updated) {
+        return ResponseEntity.ok(customerService.fullReplace(id, updated));
+    }
+
+    // PATCH: @Modifying @Query → UPDATE customers SET phone=? WHERE id=?
+    @PatchMapping("/{id}/phone")
+    public ResponseEntity<Customer> updatePhone(
+            @PathVariable Long id,
+            @RequestParam String phone) {
+        return ResponseEntity.ok(customerService.updatePhone(id, phone));
+    }
+
+    // PATCH: @Modifying @Query → UPDATE customers SET status=? WHERE id=?
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Customer> updateStatus(
+            @PathVariable Long id,
+            @RequestParam CustomerStatus status) {
+        return ResponseEntity.ok(customerService.updateStatus(id, status));
+    }
+
+    // ==================== MEDIUM UPDATE ====================
+
+    // PATCH: @Modifying @Query → UPDATE customers SET loyalty_points = loyalty_points + ? WHERE id=?
+    @PatchMapping("/{id}/loyalty-points")
+    public ResponseEntity<Customer> addLoyaltyPoints(
+            @PathVariable Long id,
+            @RequestParam int delta) {
+        return ResponseEntity.ok(customerService.addLoyaltyPoints(id, delta));
+    }
+
+    // POST: carrega Customer, adiciona ao List<Address>, save() — JPA: INSERT INTO customer_addresses
+    @PostMapping("/{id}/addresses")
+    public ResponseEntity<Customer> addAddress(
+            @PathVariable Long id,
+            @RequestBody Address address) {
+        return ResponseEntity.ok(customerService.addAddress(id, address));
+    }
+
+    // DELETE: carrega Customer, removeIf, save() — JPA: recria customer_addresses
+    @DeleteMapping("/{id}/addresses")
+    public ResponseEntity<Customer> removeAddressByCity(
+            @PathVariable Long id,
+            @RequestParam String city) {
+        return ResponseEntity.ok(customerService.removeAddressByCity(id, city));
+    }
+
+    // ==================== ADVANCED UPDATE ====================
+
+    // PATCH bulk: @Modifying @Query → UPDATE N clientes numa única query SQL
+    // Retorna a quantidade de linhas afetadas
+    @PatchMapping("/suspend-inactive")
+    public ResponseEntity<Integer> suspendInactiveCustomers(
+            @RequestParam(defaultValue = "100") int maxPoints) {
+        return ResponseEntity.ok(customerService.suspendInactiveCustomers(maxPoints));
+    }
+
+    // PATCH: carrega Customer, localiza Address pela cidade, atualiza zipCode, salva
+    // SQL equivalente ao operador posicional $ do MongoDB
+    @PatchMapping("/{id}/addresses/zip")
+    public ResponseEntity<Customer> updateAddressZip(
+            @PathVariable Long id,
+            @RequestParam String city,
+            @RequestParam String newZipCode) {
+        return ResponseEntity.ok(customerService.updateAddressZip(id, city, newZipCode));
     }
 }

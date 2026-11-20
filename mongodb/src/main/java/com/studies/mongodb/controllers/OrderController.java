@@ -1,6 +1,7 @@
 package com.studies.mongodb.controllers;
 
 import com.studies.mongodb.documents.OrderDocument;
+import com.studies.mongodb.documents.embedded.OrderItemDocument;
 import com.studies.mongodb.enums.OrderStatus;
 import com.studies.mongodb.services.OrderService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -118,12 +119,48 @@ public class OrderController {
         return orderService.findLargeActiveOrders(minTotal, minItems);
     }
 
-    // ==================== UPDATE ====================
+    // ==================== BASIC UPDATE ====================
 
+    // PATCH: save() — carrega o pedido, altera status em memória e salva de volta
     @PatchMapping("/{id}/status")
     public ResponseEntity<OrderDocument> updateStatus(
             @PathVariable String id,
             @RequestParam OrderStatus status) {
         return ResponseEntity.ok(orderService.updateStatus(id, status));
+    }
+
+    // ==================== MEDIUM UPDATE ====================
+
+    // POST: $push + $inc — adiciona item e atualiza o total num único comando atômico
+    @PostMapping("/{id}/items")
+    public ResponseEntity<OrderDocument> addItem(
+            @PathVariable String id,
+            @RequestBody OrderItemDocument item) {
+        return ResponseEntity.ok(orderService.addItem(id, item));
+    }
+
+    // DELETE: $pull + $inc — remove item do array e subtrai do total
+    @DeleteMapping("/{id}/items/{productId}")
+    public ResponseEntity<OrderDocument> removeItem(
+            @PathVariable String id,
+            @PathVariable String productId) {
+        return ResponseEntity.ok(orderService.removeItem(id, productId));
+    }
+
+    // ==================== ADVANCED UPDATE ====================
+
+    // PATCH bulk: updateMulti — cancela em massa pedidos PENDING mais antigos que N dias
+    // Retorna a quantidade de documentos modificados
+    @PatchMapping("/bulk-cancel")
+    public ResponseEntity<Long> bulkCancelPendingOrders(
+            @RequestParam(defaultValue = "30") int olderThanDays) {
+        return ResponseEntity.ok(orderService.bulkCancelPendingOrders(olderThanDays));
+    }
+
+    // PATCH: AggregationUpdate (pipeline update) — recalcula totalAmount usando expressão MongoDB
+    // Recalcula sum(unitPrice * quantity) de cada item diretamente no banco
+    @PatchMapping("/{id}/recalculate")
+    public ResponseEntity<OrderDocument> recalculateTotal(@PathVariable String id) {
+        return ResponseEntity.ok(orderService.recalculateTotal(id));
     }
 }

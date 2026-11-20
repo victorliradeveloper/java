@@ -33,9 +33,11 @@ public class FilterExamples {
     @GetMapping("/by-category")
     public List<Product> byCategory(@RequestParam String category) {
         log.info("GET /api/filter/by-category?category={}", category);
-        return repository.findAll().stream()
+        List<Product> result = repository.findAll()
+                .stream()
                 .filter(p -> category.equalsIgnoreCase(p.category()))
                 .toList();
+        return result;
     }
 
     @GetMapping("/price-range")

@@ -3,6 +3,7 @@ package com.studies.sqlqueries.repositories;
 import com.studies.sqlqueries.entities.Customer;
 import com.studies.sqlqueries.enums.CustomerStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -92,4 +93,36 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
               AND ca.country = 'Brazil'
             """)
     List<Customer> findHighValueBrazilianCustomers(@Param("minPoints") int minPoints);
+
+    // ==================== BASIC UPDATE ====================
+
+    // MongoDB: $set → SQL: UPDATE ... SET field = value WHERE id = ?
+    // @Modifying marca que esta query modifica dados (UPDATE/DELETE), não apenas lê.
+    // Sem ele, o Spring Data lançaria uma exceção ao executar.
+    @Modifying
+    @Query("UPDATE Customer c SET c.phone = :phone WHERE c.id = :id")
+    int updatePhone(@Param("id") Long id, @Param("phone") String phone);
+
+    // MongoDB: $set → SQL: UPDATE ... SET status = ? WHERE id = ?
+    @Modifying
+    @Query("UPDATE Customer c SET c.status = :status WHERE c.id = :id")
+    int updateStatus(@Param("id") Long id, @Param("status") CustomerStatus status);
+
+    // ==================== MEDIUM UPDATE ====================
+
+    // MongoDB: $inc → SQL: SET field = field + delta
+    // A expressão "c.loyaltyPoints + :delta" é avaliada pelo banco — operação atômica.
+    @Modifying
+    @Query("UPDATE Customer c SET c.loyaltyPoints = c.loyaltyPoints + :delta WHERE c.id = :id")
+    int addLoyaltyPoints(@Param("id") Long id, @Param("delta") int delta);
+
+    // ==================== ADVANCED UPDATE ====================
+
+    // MongoDB: updateMulti → SQL: UPDATE sem WHERE por id — afeta N linhas.
+    // Retorna o número de linhas afetadas.
+    @Modifying
+    @Query("UPDATE Customer c SET c.status = :newStatus WHERE c.status = :currentStatus AND c.loyaltyPoints < :maxPoints")
+    int bulkUpdateStatus(@Param("currentStatus") CustomerStatus currentStatus,
+                         @Param("newStatus") CustomerStatus newStatus,
+                         @Param("maxPoints") int maxPoints);
 }

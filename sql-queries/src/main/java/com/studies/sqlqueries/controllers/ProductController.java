@@ -1,6 +1,7 @@
 package com.studies.sqlqueries.controllers;
 
 import com.studies.sqlqueries.entities.Product;
+import com.studies.sqlqueries.entities.Rating;
 import com.studies.sqlqueries.services.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -139,5 +140,77 @@ public class ProductController {
             @RequestParam Double maxPrice,
             @RequestParam(defaultValue = "4") int minRating) {
         return productService.findDeals(category, maxPrice, minRating);
+    }
+
+    // ==================== BASIC UPDATE ====================
+
+    // PUT: substitui todos os campos — JPA: UPDATE products SET ... WHERE id=?
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> fullReplace(
+            @PathVariable Long id,
+            @RequestBody Product updated) {
+        return ResponseEntity.ok(productService.fullReplace(id, updated));
+    }
+
+    // PATCH: @Modifying @Query → UPDATE products SET price=? WHERE id=?
+    @PatchMapping("/{id}/price")
+    public ResponseEntity<Product> updatePrice(
+            @PathVariable Long id,
+            @RequestParam Double price) {
+        return ResponseEntity.ok(productService.updatePrice(id, price));
+    }
+
+    // ==================== MEDIUM UPDATE ====================
+
+    // PATCH: @Modifying @Query → UPDATE products SET stock_quantity = stock_quantity + ? WHERE id=?
+    @PatchMapping("/{id}/stock")
+    public ResponseEntity<Product> adjustStock(
+            @PathVariable Long id,
+            @RequestParam int delta) {
+        return ResponseEntity.ok(productService.adjustStock(id, delta));
+    }
+
+    // PATCH: carrega Product, verifica duplicata, adiciona ao List<String> tags e salva
+    // JPA: recria product_tags — equivalente ao $addToSet do MongoDB
+    @PatchMapping("/{id}/tags")
+    public ResponseEntity<Product> addTag(
+            @PathVariable Long id,
+            @RequestParam String tag) {
+        return ResponseEntity.ok(productService.addTag(id, tag));
+    }
+
+    // DELETE: carrega Product, remove da lista e salva — JPA recria product_tags
+    @DeleteMapping("/{id}/tags/{tag}")
+    public ResponseEntity<Product> removeTag(
+            @PathVariable Long id,
+            @PathVariable String tag) {
+        return ResponseEntity.ok(productService.removeTag(id, tag));
+    }
+
+    // POST: carrega Product, adiciona Rating, ordena por score e salva — JPA recria product_ratings
+    @PostMapping("/{id}/ratings")
+    public ResponseEntity<Product> addRating(
+            @PathVariable Long id,
+            @RequestBody Rating rating) {
+        return ResponseEntity.ok(productService.addRating(id, rating));
+    }
+
+    // ==================== ADVANCED UPDATE ====================
+
+    // PATCH bulk: @Modifying @Query → UPDATE products SET price = price * ? WHERE category = ?
+    // Uma query SQL atualiza N produtos — equivalente ao updateMulti + $mul do MongoDB
+    @PatchMapping("/category/{category}/price")
+    public ResponseEntity<Integer> adjustCategoryPrice(
+            @PathVariable String category,
+            @RequestParam double factor) {
+        return ResponseEntity.ok(productService.adjustCategoryPrice(category, factor));
+    }
+
+    // DELETE: carrega Product, remove Rating pelo userId e salva
+    @DeleteMapping("/{id}/ratings/{userId}")
+    public ResponseEntity<Product> removeRating(
+            @PathVariable Long id,
+            @PathVariable Long userId) {
+        return ResponseEntity.ok(productService.removeRating(id, userId));
     }
 }

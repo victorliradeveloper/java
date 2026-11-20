@@ -3,6 +3,7 @@ package com.studies.sqlqueries.repositories;
 import com.studies.sqlqueries.entities.Order;
 import com.studies.sqlqueries.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -100,4 +101,40 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             """)
     List<Order> findLargeActiveOrders(@Param("minTotal") Double minTotal,
                                       @Param("minItems") int minItems);
+
+    // ==================== BASIC UPDATE ====================
+
+    // MongoDB: $set → SQL: UPDATE SET status = ? WHERE id = ?
+    @Modifying
+    @Query("UPDATE Order o SET o.status = :status, o.updatedAt = :now WHERE o.id = :id")
+    int updateStatus(@Param("id") Long id, @Param("status") OrderStatus status,
+                     @Param("now") LocalDateTime now);
+
+    // ==================== ADVANCED UPDATE ====================
+
+    // MongoDB: updateMulti → SQL UPDATE sem filtro por id — afeta N linhas.
+    // Cancela em lote todos os pedidos PENDING mais antigos que o cutoff.
+    @Modifying
+    @Query("UPDATE Order o SET o.status = :newStatus, o.updatedAt = :now WHERE o.status = :currentStatus AND o.createdAt < :cutoff")
+    int bulkUpdateStatus(@Param("currentStatus") OrderStatus currentStatus,
+                         @Param("newStatus") OrderStatus newStatus,
+                         @Param("cutoff") LocalDateTime cutoff,
+                         @Param("now") LocalDateTime now);
+
+    // MongoDB: AggregationUpdate (pipeline update) → SQL: UPDATE com subquery no SET.
+    // Recalcula total_amount a partir da tabela order_items sem carregar o pedido.
+    // Equivalente MongoDB:
+    //   { $set: { totalAmount: { $sum: { $map: { input:"$items", in:{ $multiply:["$$item.unitPrice","$$item.quantity"] } } } } } }
+    @Modifying
+    @Query(nativeQuery = true, value = """
+            UPDATE orders SET
+                total_amount = (
+                    SELECT COALESCE(SUM(oi.unit_price * oi.quantity), 0)
+                    FROM order_items oi
+                    WHERE oi.order_id = :id
+                ),
+                updated_at = :now
+            WHERE id = :id
+            """)
+    int recalculateTotal(@Param("id") Long id, @Param("now") LocalDateTime now);
 }

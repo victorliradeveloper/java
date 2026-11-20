@@ -2,6 +2,7 @@ package com.studies.sqlqueries.repositories;
 
 import com.studies.sqlqueries.entities.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -138,4 +139,27 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findCategoryDeals(@Param("category") String category,
                                     @Param("maxPrice") Double maxPrice,
                                     @Param("minRating") int minRating);
+
+    // ==================== BASIC UPDATE ====================
+
+    // MongoDB: $set → SQL UPDATE SET campo = valor
+    @Modifying
+    @Query("UPDATE Product p SET p.price = :price WHERE p.id = :id")
+    int updatePrice(@Param("id") Long id, @Param("price") Double price);
+
+    // ==================== MEDIUM UPDATE ====================
+
+    // MongoDB: $inc → SQL: SET stock_quantity = stock_quantity + delta
+    // Positivo = entrada de estoque, negativo = saída
+    @Modifying
+    @Query("UPDATE Product p SET p.stockQuantity = p.stockQuantity + :delta WHERE p.id = :id")
+    int adjustStock(@Param("id") Long id, @Param("delta") int delta);
+
+    // ==================== ADVANCED UPDATE ====================
+
+    // MongoDB: updateMulti + $mul → SQL: UPDATE SET price = price * factor WHERE category = ?
+    // $mul não existe em JPQL — equivalente é a multiplicação direta: price = price * :factor
+    @Modifying
+    @Query("UPDATE Product p SET p.price = p.price * :factor WHERE p.category = :category")
+    int adjustCategoryPrice(@Param("category") String category, @Param("factor") double factor);
 }
