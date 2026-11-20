@@ -2,6 +2,8 @@ package com.studies.mongodb.services;
 
 import com.studies.mongodb.documents.ProductDocument;
 import com.studies.mongodb.repositories.ProductRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,6 +11,8 @@ import java.util.Optional;
 
 @Service
 public class ProductService {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
 
@@ -21,6 +25,8 @@ public class ProductService {
     }
 
     public Optional<ProductDocument> findById(String id) {
+        log.info("Hello World");
+        log.info("ID: {}", id);
         return productRepository.findById(id);
     }
 

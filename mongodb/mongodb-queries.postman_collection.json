@@ -1,0 +1,518 @@
+{
+  "info": {
+    "name": "MongoDB Queries",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8085"
+    }
+  ],
+  "item": [
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List all products",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products"
+          }
+        },
+        {
+          "name": "Get product by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/:id",
+            "variable": [{ "key": "id", "value": "PRODUCT_ID" }]
+          }
+        },
+        {
+          "name": "Get products by category",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/category/:category",
+            "variable": [{ "key": "category", "value": "Electronics" }]
+          }
+        },
+        {
+          "name": "Get products by price range",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/price-range?min=10&max=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "price-range"],
+              "query": [
+                { "key": "min", "value": "10" },
+                { "key": "max", "value": "100" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get low stock products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/low-stock?threshold=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "low-stock"],
+              "query": [{ "key": "threshold", "value": "10" }]
+            }
+          }
+        },
+        {
+          "name": "Get products by tag",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/tag/:tag",
+            "variable": [{ "key": "tag", "value": "sale" }]
+          }
+        },
+        {
+          "name": "Get products by category and max price",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/category/:category/max-price/:maxPrice",
+            "variable": [
+              { "key": "category", "value": "Electronics" },
+              { "key": "maxPrice", "value": "500" }
+            ]
+          }
+        },
+        {
+          "name": "Get products with all tags",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/all-tags?tags=sale&tags=new",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "all-tags"],
+              "query": [
+                { "key": "tags", "value": "sale" },
+                { "key": "tags", "value": "new" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get products by color",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/color/:color",
+            "variable": [{ "key": "color", "value": "black" }]
+          }
+        },
+        {
+          "name": "Get in-stock products with tags",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/in-stock/tags?tags=sale&tags=new",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "in-stock", "tags"],
+              "query": [
+                { "key": "tags", "value": "sale" },
+                { "key": "tags", "value": "new" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get products by categories and price range",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/categories/price-range?categories=Electronics&categories=Books&min=10&max=200",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "categories", "price-range"],
+              "query": [
+                { "key": "categories", "value": "Electronics" },
+                { "key": "categories", "value": "Books" },
+                { "key": "min", "value": "10" },
+                { "key": "max", "value": "200" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get products rated by user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/rated-by/:userId",
+            "variable": [{ "key": "userId", "value": "USER_ID" }]
+          }
+        },
+        {
+          "name": "Get products with min rating",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/min-rating/:minScore",
+            "variable": [{ "key": "minScore", "value": "4" }]
+          }
+        },
+        {
+          "name": "Get products with only high ratings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/only-high-ratings/:minScore",
+            "variable": [{ "key": "minScore", "value": "4" }]
+          }
+        },
+        {
+          "name": "Search products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/search?category=Electronics&minRating=4&maxPrice=300",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "search"],
+              "query": [
+                { "key": "category", "value": "Electronics" },
+                { "key": "minRating", "value": "4" },
+                { "key": "maxPrice", "value": "300" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get products by category or tag",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/category-or-tag?category=Electronics&tag=sale",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "category-or-tag"],
+              "query": [
+                { "key": "category", "value": "Electronics" },
+                { "key": "tag", "value": "sale" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get product deals",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/deals?category=Electronics&maxPrice=300&minRating=4",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "deals"],
+              "query": [
+                { "key": "category", "value": "Electronics" },
+                { "key": "maxPrice", "value": "300" },
+                { "key": "minRating", "value": "4" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "List all orders",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders"
+          }
+        },
+        {
+          "name": "Get order by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/:id",
+            "variable": [{ "key": "id", "value": "ORDER_ID" }]
+          }
+        },
+        {
+          "name": "Get orders by status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/status/:status",
+            "variable": [{ "key": "status", "value": "PENDING" }]
+          }
+        },
+        {
+          "name": "Get orders by customer",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/customer/:customerId",
+            "variable": [{ "key": "customerId", "value": "CUSTOMER_ID" }]
+          }
+        },
+        {
+          "name": "Get orders by customer and status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/customer/:customerId/status/:status",
+            "variable": [
+              { "key": "customerId", "value": "CUSTOMER_ID" },
+              { "key": "status", "value": "PENDING" }
+            ]
+          }
+        },
+        {
+          "name": "Get orders with min total",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/min-total?amount=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "min-total"],
+              "query": [{ "key": "amount", "value": "100" }]
+            }
+          }
+        },
+        {
+          "name": "Get orders by date range",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/date-range?status=PENDING&start=2024-01-01T00:00:00&end=2024-12-31T23:59:59",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "date-range"],
+              "query": [
+                { "key": "status", "value": "PENDING" },
+                { "key": "start", "value": "2024-01-01T00:00:00" },
+                { "key": "end", "value": "2024-12-31T23:59:59" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get orders by shipping city",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/shipping/city/:city",
+            "variable": [{ "key": "city", "value": "São Paulo" }]
+          }
+        },
+        {
+          "name": "Get orders by shipping city and statuses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/shipping/city/:city/statuses?statuses=PENDING&statuses=PROCESSING",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "shipping", "city", ":city", "statuses"],
+              "query": [
+                { "key": "statuses", "value": "PENDING" },
+                { "key": "statuses", "value": "PROCESSING" }
+              ],
+              "variable": [{ "key": "city", "value": "São Paulo" }]
+            }
+          }
+        },
+        {
+          "name": "Get orders by product",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/product/:productId",
+            "variable": [{ "key": "productId", "value": "PRODUCT_ID" }]
+          }
+        },
+        {
+          "name": "Get orders by status and min quantity",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/status-qty?status=PENDING&minQuantity=2",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "status-qty"],
+              "query": [
+                { "key": "status", "value": "PENDING" },
+                { "key": "minQuantity", "value": "2" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get stale orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/stale?pendingDays=7&processingDays=14",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "stale"],
+              "query": [
+                { "key": "pendingDays", "value": "7" },
+                { "key": "processingDays", "value": "14" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get orders with expensive items",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/expensive-items?minUnitPrice=200",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "expensive-items"],
+              "query": [{ "key": "minUnitPrice", "value": "200" }]
+            }
+          }
+        },
+        {
+          "name": "Get large orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/large?minTotal=500&minItems=2",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "large"],
+              "query": [
+                { "key": "minTotal", "value": "500" },
+                { "key": "minItems", "value": "2" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update order status",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/orders/:id/status?status=PROCESSING",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", ":id", "status"],
+              "query": [{ "key": "status", "value": "PROCESSING" }],
+              "variable": [{ "key": "id", "value": "ORDER_ID" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "List all customers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/customers"
+          }
+        },
+        {
+          "name": "Get customer by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/customers/:id",
+            "variable": [{ "key": "id", "value": "CUSTOMER_ID" }]
+          }
+        },
+        {
+          "name": "Get customer by email",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/customers/email/:email",
+            "variable": [{ "key": "email", "value": "user@example.com" }]
+          }
+        },
+        {
+          "name": "Get customers by status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/customers/status/:status",
+            "variable": [{ "key": "status", "value": "ACTIVE" }]
+          }
+        },
+        {
+          "name": "Get customers by status and min points",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/customers/status/:status/min-points/:minPoints",
+            "variable": [
+              { "key": "status", "value": "ACTIVE" },
+              { "key": "minPoints", "value": "500" }
+            ]
+          }
+        },
+        {
+          "name": "Get customers by city",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/customers/city/:city",
+            "variable": [{ "key": "city", "value": "São Paulo" }]
+          }
+        },
+        {
+          "name": "Get customers by location",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customers/location?city=São Paulo&state=SP",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "location"],
+              "query": [
+                { "key": "city", "value": "São Paulo" },
+                { "key": "state", "value": "SP" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search customers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customers/search?name=John&status=ACTIVE",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "search"],
+              "query": [
+                { "key": "name", "value": "John" },
+                { "key": "status", "value": "ACTIVE" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get VIP customers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customers/vip?activeThreshold=1000&inactiveThreshold=2000",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "vip"],
+              "query": [
+                { "key": "activeThreshold", "value": "1000" },
+                { "key": "inactiveThreshold", "value": "2000" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get active customers by country",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/customers/country/:country/active",
+            "variable": [{ "key": "country", "value": "Brazil" }]
+          }
+        },
+        {
+          "name": "Get customers with multiple addresses",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/customers/multiple-addresses"
+          }
+        },
+        {
+          "name": "Get high value customers in Brazil",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customers/high-value/brazil?minPoints=500",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "high-value", "brazil"],
+              "query": [{ "key": "minPoints", "value": "500" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
